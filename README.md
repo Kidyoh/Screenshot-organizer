@@ -87,6 +87,15 @@ flutter test --dart-define=SCREENSHOTS=true test/screenshots_test.dart
 
 Release builds are signed with the key in `android/key.properties` (not
 committed). Without it they fall back to the debug key.
+`scripts/setup-signing.sh` recreates it from the `ANDROID_KEYSTORE_*` secrets.
+
+## Releases
+
+Push a tag that matches the version in `pubspec.yaml` (for example `v1.2.0`), or
+run Actions > Release > Run workflow. It runs the checks, builds the signed APK,
+verifies the signing key's fingerprint and publishes the Release with the APK
+and a checksum. It needs the repository secrets `ANDROID_KEYSTORE_BASE64`,
+`ANDROID_KEYSTORE_PASSWORD` and `ANDROID_KEY_ALIAS`.
 
 The launch screen is generated from `assets/icon` with
 `dart run flutter_native_splash:create`. The launcher icon is drawn in code by
