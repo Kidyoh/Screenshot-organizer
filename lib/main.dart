@@ -1,49 +1,69 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:photo_manager/photo_manager.dart';
 
+import 'app/prefs.dart';
+import 'data/demo.dart';
 import 'data/library.dart';
-import 'ui/home.dart';
+import 'ui/design/theme.dart';
 import 'ui/scope.dart';
+import 'ui/screens/shell.dart';
+
+/// `flutter run --dart-define=DEMO=true` fills the app with sample screenshots.
+const demoMode = bool.fromEnvironment('DEMO');
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  final library = Library()..start();
-  runApp(SnapSortApp(library: library));
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  final prefs = Prefs()..load();
+  final library = demoMode
+      ? Library(
+          channel: DemoMediaChannel(),
+          permission: ({required bool ask}) async => PermissionState.authorized,
+        )
+      : Library();
+  library.start();
+  runApp(SnapSortApp(library: library, prefs: prefs));
 }
 
 class SnapSortApp extends StatelessWidget {
-  const SnapSortApp({super.key, required this.library});
-  final Library library;
+  const SnapSortApp({super.key, required this.library, required this.prefs, this.home});
 
-  static ThemeData theme(Brightness brightness) {
-    final scheme = ColorScheme.fromSeed(
-      seedColor: const Color(0xFF7B5CFF),
-      brightness: brightness,
-    );
-    return ThemeData(
-      colorScheme: scheme,
-      useMaterial3: true,
-      appBarTheme: AppBarTheme(
-        backgroundColor: scheme.surface,
-        scrolledUnderElevation: 2,
-      ),
-      cardTheme: CardThemeData(
-        elevation: 0,
-        color: scheme.surfaceContainerLow,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      ),
-    );
-  }
+  final Library library;
+  final Prefs prefs;
+
+  /// Overrides the root screen (used by screenshot tests).
+  final Widget? home;
 
   @override
   Widget build(BuildContext context) {
-    return LibraryScope(
-      library: library,
-      child: MaterialApp(
-        title: 'SnapSort',
-        debugShowCheckedModeBanner: false,
-        theme: theme(Brightness.light),
-        darkTheme: theme(Brightness.dark),
-        home: const Root(),
+    return PrefsScope(
+      prefs: prefs,
+      child: LibraryScope(
+        library: library,
+        child: ListenableBuilder(
+          listenable: prefs,
+          builder: (context, _) => MaterialApp(
+            title: 'SnapSort',
+            debugShowCheckedModeBanner: false,
+            theme: buildTheme(Brightness.light),
+            darkTheme: buildTheme(Brightness.dark),
+            themeMode: prefs.themeMode,
+            scrollBehavior: const AppScrollBehavior(),
+            builder: (context, child) {
+              final dark = Theme.of(context).brightness == Brightness.dark;
+              return AnnotatedRegion<SystemUiOverlayStyle>(
+                value: (dark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark).copyWith(
+                  statusBarColor: Colors.transparent,
+                  systemNavigationBarColor: Colors.transparent,
+                  systemNavigationBarContrastEnforced: false,
+                ),
+                child: child!,
+              );
+            },
+            home: home ?? const Root(),
+          ),
+        ),
       ),
     );
   }

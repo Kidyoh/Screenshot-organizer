@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:snapsort/app/prefs.dart';
 import 'package:snapsort/data/library.dart';
 import 'package:snapsort/data/media_channel.dart';
 import 'package:snapsort/data/shot.dart';
 import 'package:snapsort/main.dart';
+import 'package:snapsort/ui/screens/shell.dart';
 
 /// Stands in for the native side with a handful of made-up screenshots.
 class FakeMedia extends MediaChannel {
@@ -68,47 +70,54 @@ class FakeMedia extends MediaChannel {
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
-  Future<(Library, FakeMedia)> launch(WidgetTester tester) async {
+  Future<Library> launch(WidgetTester tester) async {
     tester.view.physicalSize = const Size(1080, 2400);
     tester.view.devicePixelRatio = 2.75;
     addTearDown(tester.view.reset);
-    final media = FakeMedia();
     final lib = Library(
-      channel: media,
+      channel: FakeMedia(),
       permission: ({required bool ask}) async => PermissionState.authorized,
     );
     await lib.start();
-    await tester.pumpWidget(SnapSortApp(library: lib));
+    await tester.pumpWidget(SnapSortApp(library: lib, prefs: Prefs()));
     await tester.pumpAndSettle();
-    return (lib, media);
+    return lib;
   }
 
-  testWidgets('groups screenshots by app', (tester) async {
-    final (lib, _) = await launch(tester);
+  testWidgets('groups screenshots by app and opens the tabs', (tester) async {
+    final lib = await launch(tester);
+    expect(find.byType(Shell), findsOneWidget);
     expect(lib.shots, hasLength(6));
     expect({for (final g in lib.apps) g.name: g.shots.length},
         {'Chrome': 2, 'WhatsApp': 2, 'Instagram': 1, 'Other': 1});
-    expect(find.text('SnapSort'), findsOneWidget);
-    expect(find.textContaining('Today', findRichText: true), findsOneWidget);
-    expect(find.textContaining('Yesterday', findRichText: true), findsOneWidget);
-  });
+    expect(find.textContaining('TODAY', findRichText: true), findsOneWidget);
 
-  testWidgets('select, add to album, browse every tab', (tester) async {
-    final (lib, _) = await launch(tester);
-
-    // Filter chip
-    await tester.tap(find.text('Chrome  2'));
+    // Filter pill
+    await tester.tap(find.text('Chrome  2', findRichText: true));
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey(1)), findsNothing);
     expect(find.byKey(const ValueKey(3)), findsOneWidget);
-    await tester.tap(find.text('All  6'));
+
+    await tester.tap(find.bySemanticsLabel('Apps'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('WhatsApp'));
+    await tester.pumpAndSettle();
+    expect(find.text('2 screenshots · 977 KB'), findsOneWidget);
+    await tester.tap(find.byTooltip('Back'));
     await tester.pumpAndSettle();
 
-    // Long-press to select, then add to a new album
+    await tester.tap(find.bySemanticsLabel('Albums'));
+    await tester.pumpAndSettle();
+    expect(find.text('New album'), findsOneWidget);
+  });
+
+  testWidgets('select, add to a new album, then clean up duplicates', (tester) async {
+    final lib = await launch(tester);
+
     await tester.longPress(find.byKey(const ValueKey(1)));
     await tester.pumpAndSettle();
-    expect(find.text('1 selected'), findsOneWidget);
-    await tester.tap(find.byTooltip('Add to album'));
+    expect(find.textContaining('selected', findRichText: true).hitTestable(), findsOneWidget);
+    await tester.tap(find.bySemanticsLabel('Album').hitTestable());
     await tester.pumpAndSettle();
     await tester.tap(find.text('New album'));
     await tester.pumpAndSettle();
@@ -116,55 +125,56 @@ void main() {
     await tester.tap(find.text('Create'));
     await tester.pumpAndSettle();
     expect(lib.albumShots('Chats').map((s) => s.id), [1]);
+    expect(find.textContaining('selected', findRichText: true).hitTestable(), findsNothing);
 
-    // Apps tab -> open an app
-    await tester.tap(find.text('Apps').last);
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('WhatsApp'));
-    await tester.pumpAndSettle();
-    expect(find.textContaining('2 screenshots'), findsOneWidget);
-    await tester.pageBack();
-    await tester.pumpAndSettle();
-
-    // Albums tab
-    await tester.tap(find.text('Albums').last);
-    await tester.pumpAndSettle();
-    expect(find.text('Chats'), findsOneWidget);
-    await tester.tap(find.text('Chats'));
-    await tester.pumpAndSettle();
-    await tester.pageBack();
-    await tester.pumpAndSettle();
-
-    // Clean up tab: duplicates
-    await tester.tap(find.text('Clean up').last);
+    await tester.tap(find.bySemanticsLabel('Clean up'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Scan'));
     await tester.pumpAndSettle();
-    expect(find.textContaining('1 extra copy'), findsOneWidget);
+    expect(find.text('1 extra copy you can let go'), findsOneWidget);
     await tester.tap(find.text('Review').first);
     await tester.pumpAndSettle();
-    expect(find.text('1 selected'), findsOneWidget);
-    await tester.tap(find.byTooltip('Delete'));
+    expect(find.textContaining('1 ', findRichText: true), findsWidgets);
+    await tester.tap(find.bySemanticsLabel('Delete').hitTestable());
     await tester.pumpAndSettle();
     expect(lib.shots, hasLength(5));
     expect(find.text('All clear'), findsOneWidget);
   });
 
-  testWidgets('viewer opens, favourites and deletes', (tester) async {
-    final (lib, _) = await launch(tester);
+  testWidgets('viewer favourites and deletes', (tester) async {
+    final lib = await launch(tester);
+    await tester.dragUntilVisible(
+        find.byKey(const ValueKey(3)), find.byType(CustomScrollView).first, const Offset(0, -200));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey(3)));
     await tester.pumpAndSettle();
     expect(find.text('Chrome'), findsWidgets);
-    await tester.tap(find.text('Favorite'));
+    await tester.tap(find.bySemanticsLabel('Favorite').hitTestable());
     await tester.pumpAndSettle();
     expect(lib.favorites, {3});
-    await tester.drag(find.byType(PageView), const Offset(-600, 0));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Delete'));
+    await tester.tap(find.bySemanticsLabel('Delete').hitTestable());
     await tester.pumpAndSettle();
     expect(lib.shots, hasLength(5));
     await tester.tap(find.byTooltip('Details'));
     await tester.pumpAndSettle();
     expect(find.text('Folder'), findsOneWidget);
+  });
+
+  testWidgets('every tab lays out with large text', (tester) async {
+    tester.platformDispatcher.textScaleFactorTestValue = 1.3;
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+    final lib = await launch(tester);
+    lib.setFavorite(lib.shots.take(2), true);
+    lib.createAlbum('A rather long album name for testing');
+    for (final tab in ['Apps', 'Albums', 'Clean up', 'Timeline']) {
+      await tester.tap(find.bySemanticsLabel(tab));
+      await tester.pumpAndSettle();
+    }
+    await tester.tap(find.bySemanticsLabel('Clean up'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Scan'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Review').first);
+    await tester.pumpAndSettle();
   });
 }

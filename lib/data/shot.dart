@@ -12,6 +12,7 @@ class Shot {
     required this.folder,
     required this.path,
     this.app = otherApp,
+    this.asset,
   });
 
   factory Shot.fromMap(Map<dynamic, dynamic> m) => Shot(
@@ -23,6 +24,7 @@ class Shot {
         height: (m['height'] as num?)?.toInt() ?? 0,
         folder: m['folder'] as String? ?? '',
         path: m['path'] as String? ?? '',
+        asset: m['asset'] as String?,
       );
 
   static const otherApp = 'Other';
@@ -42,6 +44,11 @@ class Shot {
 
   /// Which app the screenshot was taken in, or [otherApp].
   String app;
+
+  /// Bundled image used instead of the media store in demo mode.
+  final String? asset;
+
+  double get aspect => width > 0 && height > 0 ? width / height : 9 / 19.5;
 
   late final AssetEntity entity = AssetEntity(
     id: '$id',
@@ -76,6 +83,19 @@ String shortDate(DateTime d) {
   final base = '${_shortMonths[d.month - 1]} ${d.day}';
   return d.year == now.year ? base : '$base, ${d.year}';
 }
+
+const _weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+String longDate(DateTime d) =>
+    '${_weekdays[d.weekday - 1]}, ${_months[d.month - 1]} ${d.day}, ${d.year}';
+
+String greeting(DateTime now) => now.hour < 5
+    ? 'Up late'
+    : now.hour < 12
+        ? 'Good morning'
+        : now.hour < 18
+            ? 'Good afternoon'
+            : 'Good evening';
 
 String timeOfDay(DateTime d) {
   final h = d.hour % 12 == 0 ? 12 : d.hour % 12;

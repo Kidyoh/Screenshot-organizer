@@ -1,60 +1,106 @@
-<p align="center"><img src="docs/icon.png" width="128" alt="SnapSort icon"></p>
-
 # SnapSort
 
+<img src="docs/icon.png" width="96" align="right">
+
 **Your screenshots, sorted.** A Flutter app for Android that reads your phone's
-Screenshots folder and organizes it. No AI, no internet permission — everything
-stays on the phone.
+Screenshots folder and organizes it. No AI and no internet permission:
+everything stays on the phone.
 
-## What it does
+<p>
+  <img src="docs/screenshots/timeline.png" width="200">
+  <img src="docs/screenshots/apps.png" width="200">
+  <img src="docs/screenshots/albums.png" width="200">
+  <img src="docs/screenshots/cleanup.png" width="200">
+</p>
 
-- **Timeline** – every screenshot, newest first, grouped into Today / Yesterday /
-  This week / months. Quick filter chips for your top apps and search by app,
-  file name or month.
-- **Apps** – screenshots grouped by the app they were taken in. The app is read
-  from the file name, which phone makers fill in differently:
+<p>
+  <img src="docs/screenshots/onboarding-1.png" width="160">
+  <img src="docs/screenshots/onboarding-2.png" width="160">
+  <img src="docs/screenshots/selecting.png" width="160">
+  <img src="docs/screenshots/viewer.png" width="160">
+  <img src="docs/screenshots/timeline-dark.png" width="160">
+</p>
+
+## Design
+
+A warm, editorial look that matches the app icon.
+
+- **Type:** Plus Jakarta Sans for the interface, with Instrument Serif italic for
+  the accent word in each big title ("Your *screenshots.*", "Clean *up.*").
+  Both are bundled in `assets/fonts` under the SIL Open Font License.
+- **Colour:** a warm off-white page (near-black in dark mode), violet and coral
+  from the icon, and a stable colour per app (WhatsApp green, Chrome blue…).
+- **Shapes:** very rounded cards, white circle buttons, and fanned stacks of
+  screenshots, the icon's motif, on every app and album card.
+- **Navigation:** a floating dark pill. The current tab grows into a labelled
+  white pill. While you select screenshots, it slides away for a dock with
+  Album, Share, Favorite and Delete.
+- **Viewer:** the thumbnail flies into a full-screen view with frosted-glass
+  controls. Pinch or double-tap to zoom, swipe sideways for the next one, swipe
+  down to close.
+- **Motion:** staggered entrances (`flutter_animate`), springy press feedback,
+  numbers that count up, and haptics on selection.
+- **Onboarding:** three full-bleed pages with animated art built from sample
+  screenshots, ending with the photo permission request.
+
+Design tokens live in `lib/ui/design/tokens.dart` and the theme in
+`lib/ui/design/theme.dart`. Light, dark or system theme is set in Settings
+(the slider button on the Timeline).
+
+## Features
+
+- **Timeline:** a "Latest" rail of big cards, filter pills for your top apps,
+  search (app, file name or month), and a grid grouped into Today / Yesterday /
+  This week / months.
+- **Apps:** screenshots grouped by the app they were taken in, sorted by most,
+  biggest or A–Z. The app is read from the file name, which phone makers fill in
+  differently:
   - Samsung / Pixel: `Screenshot_20240115-093012_WhatsApp.jpg`
-  - Xiaomi: `Screenshot_2024-01-15-09-30-12-345_com.whatsapp.jpg` (package name,
-    turned into the app's real name)
+  - Xiaomi: `Screenshot_2024-01-15-09-30-12-345_com.whatsapp.jpg` (the package
+    name, turned into the app's real name)
   - Oppo / OnePlus: `Screenshot_…_<md5 of package>.jpg` (matched against
     installed apps)
   - or a `Screenshots/<App>/` subfolder
-- **Albums** – Favorites plus your own albums ("Receipts", "Memes"…).
-  Long-press to multi-select, then add to an album, share or delete.
-- **Clean up** – storage summary, byte-for-byte duplicate finder, old
-  screenshots (30 days / 3 months / 1 year), biggest files and space per app.
-  On Android 11+ deletes go to the system recycle bin (recoverable for 30 days).
-- **Viewer** – swipe between screenshots, pinch / double-tap to zoom,
-  favorite, add to album, share, open in another app, details.
+- **Albums:** Favorites plus your own albums. Long-press screenshots to select
+  them, then add them to an album, share or delete. Long-press an album to
+  rename or delete it.
+- **Clean up:** how much space screenshots take, split by app; an exact
+  duplicate finder that keeps the oldest copy; old screenshots (30 days,
+  3 months or 1 year); and the biggest files. On Android 11+ deletes go to the
+  system recycle bin, where they can be restored for 30 days.
 
-## Building
+## Run
 
 ```sh
 flutter pub get
+flutter run                          # on a phone
+flutter run --dart-define=DEMO=true  # filled with sample screenshots (nothing is read or deleted)
 flutter test
-flutter build apk --release
+flutter build apk --release --split-per-abi
 ```
 
-The APK lands in `build/app/outputs/flutter-apk/app-release.apk`.
+The screenshots above are rendered from the real screens with demo data:
 
-Release builds are signed with the key described in `android/key.properties`
-(not committed):
-
-```properties
-storePassword=…
-keyPassword=…
-keyAlias=snapsort
-storeFile=../snapsort-release.jks
+```sh
+flutter test --dart-define=SCREENSHOTS=true test/screenshots_test.dart
 ```
 
-Without that file the release build is signed with the debug key.
+Release builds are signed with the key in `android/key.properties` (not
+committed). Without it they fall back to the debug key.
 
-## Code layout
+The launch screen is generated from `assets/icon` with
+`dart run flutter_native_splash:create`. The launcher icon is drawn in code by
+`design/icon/gen_icon.py` (Android vector drawables plus an SVG preview).
 
-| Path | What |
-| --- | --- |
-| `lib/data/app_name.dart` | File name → source app parser (unit tested) |
-| `lib/data/library.dart` | App state: screenshots, app groups, albums, duplicate scan |
-| `lib/data/media_channel.dart` | Dart side of the native channel |
-| `android/app/src/main/kotlin/…/MainActivity.kt` | MediaStore query, recycle bin, share, app names, hashing |
-| `lib/ui/` | Screens: timeline, apps, albums, clean up, viewer, welcome |
+## Structure
+
+```
+lib/
+  app/        prefs (theme), routes
+  data/       Shot model, Library state, file-name → app parser, native channel, demo data
+  ui/design/  tokens and theme
+  ui/widgets/ pressable, glass, pills, cards, shot tiles, floating nav, selection dock
+  ui/screens/ shell, timeline, apps, albums, clean up, group page, viewer, settings
+  ui/onboarding/
+android/…/MainActivity.kt   MediaStore query, recycle bin, share, app names, hashing
+```
