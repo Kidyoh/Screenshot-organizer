@@ -6,12 +6,6 @@ abstract final class Brand {
   static const coral = Color(0xFFFF5E8E);
   static const amber = Color(0xFFFFB23F);
   static const mint = Color(0xFF2EC4A6);
-
-  static const gradient = LinearGradient(
-    colors: [violet, coral],
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-  );
 }
 
 /// Surfaces and text colours that flip between light and dark mode.

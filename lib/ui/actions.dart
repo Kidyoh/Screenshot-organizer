@@ -212,8 +212,7 @@ Future<bool> addToAlbum(BuildContext context, List<Shot> shots) async {
                     leading: Container(
                       width: 48,
                       height: 48,
-                      decoration: const BoxDecoration(
-                          gradient: Brand.gradient, shape: BoxShape.circle),
+                      decoration: BoxDecoration(color: context.highlight, shape: BoxShape.circle),
                       child: const Icon(Icons.add_rounded, color: Colors.white),
                     ),
                     title: 'New album',

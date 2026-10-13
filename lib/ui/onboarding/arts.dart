@@ -62,14 +62,11 @@ class FanArt extends StatelessWidget {
           clipBehavior: Clip.none,
           children: [
             Container(
-              width: 250,
-              height: 250,
+              width: 240,
+              height: 240,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                gradient: RadialGradient(colors: [
-                  Brand.violet.withValues(alpha: 0.22),
-                  Brand.violet.withValues(alpha: 0),
-                ]),
+                color: Brand.violet.withValues(alpha: context.isDark ? 0.16 : 0.10),
               ),
             ),
             for (var i = 0; i < assets.length; i++)

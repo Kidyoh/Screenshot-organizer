@@ -34,17 +34,9 @@ class Glass extends StatelessWidget {
           padding: padding,
           decoration: BoxDecoration(
             borderRadius: r,
-            color: dark ? Colors.black.withValues(alpha: 0.38) : null,
-            gradient: dark
-                ? null
-                : LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Colors.white.withValues(alpha: 0.22),
-                      Colors.white.withValues(alpha: 0.08),
-                    ],
-                  ),
+            color: dark
+                ? Colors.black.withValues(alpha: 0.38)
+                : Colors.white.withValues(alpha: 0.16),
             border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
           ),
           child: child,

@@ -4,7 +4,7 @@ import math, os, sys
 out_res = sys.argv[1]
 preview = sys.argv[2]
 
-C1, C2 = "#7B5CFF", "#FF5E8E"   # gradient
+C1 = "#6C4DFF"   # flat violet background
 ROW = ["#7B5CFF", "#FF5E8E", "#FFB23F"]
 LINE = "#E4DEFF"
 
@@ -60,11 +60,8 @@ with open(f"{out_res}/drawable/ic_launcher_foreground.xml", "w") as f:
 with open(f"{out_res}/drawable/ic_launcher_monochrome.xml", "w") as f:
     f.write(HDR.format(extra="") + vec_paths(fg, mono=True) + "\n</vector>\n")
 with open(f"{out_res}/drawable/ic_launcher_background.xml", "w") as f:
-    f.write(HDR.format(extra='\n    xmlns:aapt="http://schemas.android.com/aapt"') +
-            '    <path android:pathData="M0,0h108v108h-108z">\n'
-            '        <aapt:attr name="android:fillColor">\n'
-            f'            <gradient android:type="linear" android:startX="0" android:startY="0" android:endX="108" android:endY="108" android:startColor="{C1}" android:endColor="{C2}"/>\n'
-            '        </aapt:attr>\n    </path>\n</vector>\n')
+    f.write(HDR.format(extra='') +
+            f'    <path android:fillColor="{C1}" android:pathData="M0,0h108v108h-108z"/>\n</vector>\n')
 for name in ("ic_launcher.xml", "ic_launcher_round.xml"):
     with open(f"{out_res}/mipmap-anydpi-v26/{name}", "w") as f:
         f.write('<?xml version="1.0" encoding="utf-8"?>\n'
@@ -76,9 +73,8 @@ for name in ("ic_launcher.xml", "ic_launcher_round.xml"):
 
 # SVG preview, masked to a circle like a launcher would
 svg = [f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="9 9 90 90" width="512" height="512">',
-       f'<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="{C1}"/><stop offset="1" stop-color="{C2}"/></linearGradient>',
-       '<clipPath id="c"><circle cx="54" cy="54" r="45"/></clipPath></defs><g clip-path="url(#c)">',
-       '<rect width="108" height="108" fill="url(#g)"/>']
+       '<defs><clipPath id="c"><circle cx="54" cy="54" r="45"/></clipPath></defs><g clip-path="url(#c)">',
+       f'<rect width="108" height="108" fill="{C1}"/>']
 for d, col, a, rot in fg:
     t = f' transform="rotate({rot} {PIVOT[0]} {PIVOT[1]})"' if rot else ""
     svg.append(f'<path d="{d}" fill="{col}" fill-opacity="{a}"{t}/>')

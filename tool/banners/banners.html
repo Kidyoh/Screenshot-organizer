@@ -1,0 +1,217 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>SnapSort banners</title>
+<style>
+  @font-face { font-family: Jakarta; src: url(../../assets/fonts/PlusJakartaSans-w500.ttf); font-weight: 500; }
+  @font-face { font-family: Jakarta; src: url(../../assets/fonts/PlusJakartaSans-w600.ttf); font-weight: 600; }
+  @font-face { font-family: Jakarta; src: url(../../assets/fonts/PlusJakartaSans-w700.ttf); font-weight: 700; }
+  @font-face { font-family: Jakarta; src: url(../../assets/fonts/PlusJakartaSans-w800.ttf); font-weight: 800; }
+  @font-face { font-family: Instrument; src: url(../../assets/fonts/InstrumentSerif_400Regular_Italic.ttf); font-style: italic; }
+  @font-face { font-family: Mono; src: url(fonts/jetbrains-mono-latin-500-normal.woff2); font-weight: 500; }
+  @font-face { font-family: Mono; src: url(fonts/jetbrains-mono-latin-700-normal.woff2); font-weight: 700; }
+
+  /* The app's palette (lib/ui/design/tokens.dart). Flat colours only. */
+  :root {
+    --canvas: #F5F2ED;
+    --ink: #16151A;
+    --night: #0B0B0D;
+    --card-dark: #18171B;
+    --line-dark: #2A282E;
+    --violet: #6C4DFF;
+    --coral: #FF5E8E;
+    --amber: #FFB23F;
+    --mint: #2EC4A6;
+    --mint-wash: #DDF3EE;
+    --teal: #0E7F6B;
+    --whatsapp: #25D366;
+    --chrome: #4285F4;
+    --instagram: #E1306C;
+    --calendar: #3B82F6;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body { background: #222; font-family: Jakarta, sans-serif; display: flex; flex-direction: column; gap: 40px; padding: 40px; }
+
+  .banner { position: relative; width: 1080px; height: 1080px; overflow: hidden; color: var(--ink); background: var(--canvas); }
+  .dark { color: #fff; }
+
+  /* Header: app tile + name on the left, numbered eyebrow on the right. */
+  .brand { position: absolute; top: 64px; left: 64px; display: flex; align-items: center; gap: 20px; z-index: 6; }
+  .brand img { width: 76px; height: 76px; border-radius: 21px; box-shadow: 0 10px 26px rgba(22,21,26,.18); }
+  .brand span { font-size: 38px; font-weight: 800; letter-spacing: -1.4px; }
+  .eyebrow { position: absolute; top: 92px; right: 64px; font-size: 20px; font-weight: 800; letter-spacing: .36em; z-index: 6; }
+
+  .headline { position: absolute; left: 60px; top: 194px; font-size: 128px; font-weight: 800; line-height: .92; letter-spacing: -0.055em; z-index: 5; }
+  .serif { font-family: Instrument; font-style: italic; font-weight: 400; letter-spacing: -0.02em; line-height: .98; }
+  .sub { position: absolute; left: 64px; font-size: 30px; font-weight: 500; line-height: 1.34; letter-spacing: -0.4px; z-index: 5; }
+
+  /* Phone around a real render of the app (1170×2532, from test/screenshots_test.dart). */
+  .phone { position: absolute; width: 430px; aspect-ratio: 1170 / 2532; padding: 12px; border-radius: 64px; background: #0A0A0B;
+           box-shadow: 0 50px 90px rgba(0,0,0,.30), inset 0 0 0 2px #2b2a2f; z-index: 3; }
+  .phone img { width: 100%; height: 100%; border-radius: 53px; display: block; }
+  .phone::after { content: ''; position: absolute; top: 25px; left: 50%; width: 110px; height: 31px; margin-left: -55px; border-radius: 20px; background: #0A0A0B; }
+  .phone .status { position: absolute; top: 30px; left: 46px; right: 42px; display: flex; justify-content: space-between; align-items: center;
+                   font-size: 17px; font-weight: 700; letter-spacing: -0.2px; z-index: 2; }
+  .phone .status i { display: inline-block; width: 26px; height: 13px; border-radius: 4px; border: 2px solid currentColor; position: relative; opacity: .9; }
+  .phone .status i::after { content: ''; position: absolute; inset: 2px 6px 2px 2px; border-radius: 1px; background: currentColor; }
+  .phone.light-ui .status { color: var(--ink); }
+  .phone.dark-ui .status { color: #fff; }
+
+  /* Pills and chips, like the app's controls. */
+  .pill { position: absolute; display: inline-flex; align-items: center; gap: 14px; padding: 18px 30px; border-radius: 999px; font-weight: 700;
+          font-size: 32px; letter-spacing: -0.6px; white-space: nowrap; z-index: 6; box-shadow: 0 18px 40px rgba(22,21,26,.16); }
+  .pill.white { background: #fff; color: var(--ink); }
+  .pill.ink { background: var(--ink); color: #fff; }
+  .pill.amber { background: var(--amber); color: var(--ink); }
+  .dot { width: 14px; height: 14px; border-radius: 50%; flex: none; }
+  .count { color: rgba(22,21,26,.38); font-weight: 600; }
+  .pill.ink .count { color: rgba(255,255,255,.45); }
+
+  /* Screenshot cards (fanned stacks, the icon's motif). */
+  .shot { position: absolute; width: 170px; aspect-ratio: 390 / 844; border-radius: 22px; border: 5px solid #fff; overflow: hidden;
+          box-shadow: 0 26px 50px rgba(22,21,26,.22); z-index: 4; background: #fff; }
+  .shot img { width: 100%; height: 100%; object-fit: cover; object-position: top; display: block; }
+  .badge { position: absolute; display: grid; place-items: center; border-radius: 50%; border: 5px solid #fff; z-index: 6; }
+  .badge svg { width: 55%; height: 55%; }
+
+  /* 03 · file-name cards */
+  .fname { position: absolute; left: 64px; width: 952px; padding: 24px 28px; border-radius: 30px; background: var(--card-dark);
+           border: 1.5px solid var(--line-dark); display: flex; align-items: center; gap: 24px; z-index: 4; }
+  .fname .who { font-size: 15px; font-weight: 800; letter-spacing: .3em; color: rgba(255,255,255,.4); margin-bottom: 8px; }
+  .fname code { font-family: Mono; font-weight: 500; font-size: 22px; color: rgba(255,255,255,.55); letter-spacing: -0.3px; }
+  .fname code b { font-weight: 700; }
+  .fname .arrow { margin-left: auto; color: rgba(255,255,255,.35); flex: none; }
+  .fname .to { display: inline-flex; align-items: center; justify-content: center; width: 200px; gap: 10px; padding: 12px 20px; border-radius: 999px; background: #fff; color: var(--ink);
+               font-size: 22px; font-weight: 700; letter-spacing: -0.3px; flex: none; }
+
+  /* 07 · list card */
+  .list { position: absolute; left: 64px; width: 560px; padding: 14px 34px; border-radius: 40px; background: #fff; box-shadow: 0 30px 60px rgba(14,127,107,.14); z-index: 4; }
+  .list div { display: flex; align-items: center; gap: 20px; padding: 20px 0; font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
+  .list div + div { border-top: 1.5px solid #ECE8E1; }
+  .tick { width: 46px; height: 46px; border-radius: 50%; background: var(--mint-wash); display: grid; place-items: center; flex: none; }
+  .tick svg { width: 26px; height: 26px; }
+</style>
+</head>
+<body>
+
+<!-- 01 · HELLO -->
+<section class="banner" id="01-hello">
+  <div class="brand"><img src="../../assets/icon/icon_full.png"><span>SnapSort</span></div>
+  <div class="eyebrow" style="color:var(--violet)">01 · HELLO</div>
+  <h1 class="headline">Screenshots,<br><span class="serif" style="color:var(--violet);font-size:168px">sorted.</span></h1>
+  <p class="sub" style="top:560px;width:470px;color:rgba(22,21,26,.6)">Reads your phone's Screenshots folder and tidies it up. No AI, no account.</p>
+  <div class="pill white" style="left:64px;top:800px;transform:rotate(-4deg)"><span class="dot" style="background:var(--violet)"></span>37 screenshots</div>
+  <div class="pill ink" style="left:150px;top:900px;transform:rotate(3deg)">10 apps<span class="count">· sorted</span></div>
+  <div class="phone light-ui" style="right:48px;top:470px;transform:rotate(-7deg)"><div class="status"><span>9:41</span><i></i></div><img src="../../docs/screenshots/timeline.png"></div>
+</section>
+
+<!-- 02 · BY APP -->
+<section class="banner dark" id="02-by-app" style="background:var(--violet)">
+  <div class="brand"><img src="../../assets/icon/icon_full.png" style="box-shadow:0 10px 26px rgba(0,0,0,.25)"><span>SnapSort</span></div>
+  <div class="eyebrow" style="color:var(--amber)">02 · BY APP</div>
+  <h1 class="headline">Every app.<br><span class="serif" style="color:var(--amber);font-size:146px">Its own pile.</span></h1>
+  <p class="sub" style="top:560px;width:440px;color:rgba(255,255,255,.72)">Chats, receipts, maps and memes each get a pile of their own.</p>
+  <div class="pill white" style="left:64px;top:760px;transform:rotate(-4deg)"><span class="dot" style="background:var(--whatsapp)"></span>WhatsApp<span class="count">6</span></div>
+  <div class="pill white" style="left:130px;top:860px;transform:rotate(2deg)"><span class="dot" style="background:var(--chrome)"></span>Chrome<span class="count">5</span></div>
+  <div class="pill white" style="left:84px;top:960px;transform:rotate(-2deg)"><span class="dot" style="background:var(--calendar)"></span>Calendar<span class="count">3</span></div>
+  <div class="phone light-ui" style="right:46px;top:500px;transform:rotate(6deg)"><div class="status"><span>9:41</span><i></i></div><img src="../../docs/screenshots/apps.png"></div>
+</section>
+
+<!-- 03 · NO AI -->
+<section class="banner dark" id="03-no-ai" style="background:var(--night)">
+  <div class="brand"><img src="../../assets/icon/icon_full.png" style="box-shadow:none"><span>SnapSort</span></div>
+  <div class="eyebrow" style="color:var(--mint)">03 · NO AI</div>
+  <h1 class="headline">No AI.<br><span class="serif" style="color:var(--mint);font-size:140px">Just the file name.</span></h1>
+  <p class="sub" style="top:500px;width:720px;color:rgba(255,255,255,.62)">Phones write the app into every screenshot's name. SnapSort reads it, right on your phone.</p>
+
+  <div class="fname" style="top:666px">
+    <div><div class="who">SAMSUNG · PIXEL</div><code>Screenshot_20261012-091522_<b style="color:var(--whatsapp)">WhatsApp</b>.jpg</code></div>
+    <svg class="arrow" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    <span class="to"><span class="dot" style="background:var(--whatsapp)"></span>WhatsApp</span>
+  </div>
+  <div class="fname" style="top:798px">
+    <div><div class="who">XIAOMI</div><code>Screenshot_2026-10-10-143010_<b style="color:#7BA7FF">com.android.chrome</b>.jpg</code></div>
+    <svg class="arrow" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    <span class="to"><span class="dot" style="background:var(--chrome)"></span>Chrome</span>
+  </div>
+  <div class="fname" style="top:930px">
+    <div><div class="who">ANY PHONE · SUBFOLDER</div><code>Pictures/Screenshots/<b style="color:#FF7DA8">Instagram</b>/</code></div>
+    <svg class="arrow" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    <span class="to"><span class="dot" style="background:var(--instagram)"></span>Instagram</span>
+  </div>
+</section>
+
+<!-- 04 · FIND IT -->
+<section class="banner" id="04-find-it" style="background:var(--amber)">
+  <div class="brand"><img src="../../assets/icon/icon_full.png"><span>SnapSort</span></div>
+  <div class="eyebrow" style="color:rgba(22,21,26,.6)">04 · FIND IT</div>
+  <h1 class="headline">Find it.<br><span class="serif" style="font-size:150px">In one tap.</span></h1>
+  <p class="sub" style="top:560px;width:450px;color:rgba(22,21,26,.66)">Filter by app, search by name or month. Every day is already sorted.</p>
+  <div class="pill white" style="left:64px;top:790px;padding-right:44px;transform:rotate(-4deg)">
+    <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#6E6A73" stroke-width="2.6" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>WhatsApp
+  </div>
+  <div class="pill ink" style="left:120px;top:900px;transform:rotate(3deg)">WhatsApp<span class="count">6</span></div>
+  <div class="phone light-ui" style="right:40px;top:510px;transform:rotate(8deg)"><div class="status"><span>9:41</span><i></i></div><img src="../../docs/screenshots/timeline-filter.png"></div>
+</section>
+
+<!-- 05 · CLEAN UP -->
+<section class="banner dark" id="05-clean-up" style="background:var(--ink)">
+  <div class="brand"><img src="../../assets/icon/icon_full.png" style="box-shadow:none"><span>SnapSort</span></div>
+  <div class="eyebrow" style="color:var(--coral)">05 · CLEAN UP</div>
+  <h1 class="headline">Free up<br><span class="serif" style="color:var(--coral);font-size:176px">space.</span></h1>
+  <p class="sub" style="top:560px;width:450px;color:rgba(255,255,255,.62)">Exact duplicates, old screenshots and the biggest files, found in seconds.</p>
+  <div class="shot" style="left:64px;top:720px;transform:rotate(-7deg)"><img src="../../assets/demo/Screenshot_20261005-110245_Bank.jpg"></div>
+  <div class="shot" style="left:250px;top:744px;transform:rotate(7deg);opacity:.5"><img src="../../assets/demo/Screenshot_20261005-110245_Bank.jpg"></div>
+  <div class="badge" style="left:372px;top:722px;width:80px;height:80px;background:var(--coral);border-color:var(--ink)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><path d="M5 7h14M10 4h4M7 7l1 12h8l1-12"/></svg>
+  </div>
+  <div class="pill white" style="left:120px;top:970px;transform:rotate(-3deg)">
+    <svg width="30" height="30" viewBox="0 0 24 24" fill="var(--amber)"><path d="M12 2l2.2 6.6L21 11l-6.8 2.4L12 20l-2.2-6.6L3 11l6.8-2.4z"/></svg>2.9 MB freed
+  </div>
+  <div class="phone light-ui" style="right:46px;top:300px;transform:rotate(-6deg)"><div class="status"><span>9:41</span><i></i></div><img src="../../docs/screenshots/cleanup.png"></div>
+</section>
+
+<!-- 06 · ALBUMS -->
+<section class="banner dark" id="06-albums" style="background:var(--coral)">
+  <div class="brand"><img src="../../assets/icon/icon_full.png" style="box-shadow:0 10px 26px rgba(0,0,0,.18)"><span>SnapSort</span></div>
+  <div class="eyebrow" style="color:var(--ink)">06 · ALBUMS</div>
+  <h1 class="headline">Keep the<br><span class="serif" style="color:var(--ink);font-size:152px">good ones.</span></h1>
+  <p class="sub" style="top:560px;width:430px;color:rgba(255,255,255,.85)">Favorites and your own albums, like Receipts or Travel.</p>
+  <div class="shot" style="left:60px;top:760px;transform:rotate(-12deg)"><img src="../../assets/demo/Screenshot_20261009-190533_Chrome.jpg"></div>
+  <div class="shot" style="left:250px;top:770px;transform:rotate(10deg)"><img src="../../assets/demo/Screenshot_20261003-063015_Gmail.jpg"></div>
+  <div class="shot" style="left:156px;top:730px;z-index:5"><img src="../../assets/demo/Screenshot_20261007-221804_Instagram.jpg"></div>
+  <div class="badge" style="left:294px;top:712px;width:74px;height:74px;background:var(--ink);border-color:var(--coral)">
+    <svg viewBox="0 0 24 24" fill="#fff"><path d="M12 20.5s-7.5-4.6-9.6-9.1A5.4 5.4 0 0 1 12 5.6a5.4 5.4 0 0 1 9.6 5.8c-2.1 4.5-9.6 9.1-9.6 9.1z"/></svg>
+  </div>
+  <div class="phone light-ui" style="right:44px;top:510px;transform:rotate(7deg)"><div class="status"><span>9:41</span><i></i></div><img src="../../docs/screenshots/albums.png"></div>
+</section>
+
+<!-- 07 · PRIVATE -->
+<section class="banner" id="07-private" style="background:var(--mint-wash)">
+  <div class="brand"><img src="../../assets/icon/icon_full.png"><span>SnapSort</span></div>
+  <div class="eyebrow" style="color:var(--teal)">07 · PRIVATE</div>
+  <h1 class="headline">Private<br><span class="serif" style="color:var(--teal);font-size:152px">by design.</span></h1>
+  <p class="sub" style="top:560px;width:440px;color:rgba(22,21,26,.62)">Everything happens on your phone. Light and dark, your call.</p>
+  <div class="list" style="top:700px">
+    <div><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>No internet permission</div>
+    <div><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>No AI, no cloud</div>
+    <div><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>No account to make</div>
+  </div>
+  <div class="phone dark-ui" style="right:40px;top:510px;transform:rotate(-6deg)"><div class="status"><span>9:41</span><i></i></div><img src="../../docs/screenshots/timeline-dark.png"></div>
+</section>
+
+<!-- 08 · OUT NOW -->
+<section class="banner" id="08-out-now">
+  <div class="brand"><img src="../../assets/icon/icon_full.png"><span>SnapSort</span></div>
+  <div class="eyebrow" style="color:var(--violet)">08 · OUT NOW</div>
+  <h1 class="headline">Tidy phone.<br><span class="serif" style="color:var(--violet);font-size:168px">Clear head.</span></h1>
+  <p class="sub" style="top:560px;width:470px;color:rgba(22,21,26,.6)">Timeline, apps, albums and clean up. Free on GitHub.</p>
+  <div class="pill" style="left:64px;top:730px;background:var(--violet);color:#fff;box-shadow:0 18px 40px rgba(108,77,255,.3)">SnapSort 1.1 · Out now</div>
+  <div class="shot" style="left:560px;top:600px;width:200px;transform:rotate(-16deg)"><img src="../../assets/demo/Screenshot_20261012-091522_WhatsApp.jpg"></div>
+  <div class="shot" style="left:820px;top:610px;width:200px;transform:rotate(14deg)"><img src="../../assets/demo/Screenshot_20261008-081210_Maps.jpg"></div>
+  <img src="../../assets/icon/icon_full.png" style="position:absolute;left:600px;top:640px;width:380px;height:380px;border-radius:96px;z-index:5;box-shadow:0 40px 80px rgba(60,40,160,.28)">
+</section>
+
+</body>
+</html>

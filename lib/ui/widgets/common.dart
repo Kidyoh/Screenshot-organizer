@@ -436,8 +436,8 @@ class EmptyState extends StatelessWidget {
                 Container(
                   width: 108,
                   height: 108,
-                  decoration: const BoxDecoration(
-                    gradient: Brand.gradient,
+                  decoration: BoxDecoration(
+                    color: context.highlight,
                     shape: BoxShape.circle,
                   ),
                   child: Icon(icon, size: 44, color: Colors.white),

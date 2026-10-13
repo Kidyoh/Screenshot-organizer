@@ -30,6 +30,7 @@ A warm, editorial look that matches the app icon.
   Both are bundled in `assets/fonts` under the SIL Open Font License.
 - **Colour:** a warm off-white page (near-black in dark mode), violet and coral
   from the icon, and a stable colour per app (WhatsApp green, Chrome blue…).
+  Flat colours only: no gradients and no emoji anywhere.
 - **Shapes:** very rounded cards, white circle buttons, and fanned stacks of
   screenshots, the icon's motif, on every app and album card.
 - **Navigation:** a floating dark pill. The current tab grows into a labelled
@@ -97,9 +98,31 @@ verifies the signing key's fingerprint and publishes the Release with the APK
 and a checksum. It needs the repository secrets `ANDROID_KEYSTORE_BASE64`,
 `ANDROID_KEYSTORE_PASSWORD` and `ANDROID_KEY_ALIAS`.
 
-The launch screen is generated from `assets/icon` with
-`dart run flutter_native_splash:create`. The launcher icon is drawn in code by
-`design/icon/gen_icon.py` (Android vector drawables plus an SVG preview).
+## Banners
+
+<p>
+  <img src="docs/banners/01-hello.png" width="200">
+  <img src="docs/banners/02-by-app.png" width="200">
+  <img src="docs/banners/03-no-ai.png" width="200">
+  <img src="docs/banners/05-clean-up.png" width="200">
+</p>
+
+Eight 2160 × 2160 banners in `docs/banners`, built from `tool/banners/banners.html`
+around real renders of the app:
+
+```sh
+flutter test --dart-define=SCREENSHOTS=true test/screenshots_test.dart   # app screens
+node tool/banners/render.cjs                                              # needs `playwright`
+```
+
+The sample screenshots used in demo mode, onboarding and the banners come from
+`node tool/demo/render.cjs`.
+
+## Icon
+
+The launcher icon is drawn in code by `design/icon/gen_icon.py` (Android vector
+drawables plus `icon.svg`); `node design/icon/render.cjs` renders the PNGs, then
+`dart run flutter_native_splash:create` regenerates the launch screen.
 
 ## Structure
 

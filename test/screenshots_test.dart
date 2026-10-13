@@ -50,7 +50,7 @@ Future<void> _snap(WidgetTester tester, String name) async {
   }
   final boundary = _root.currentContext!.findRenderObject()! as RenderRepaintBoundary;
   await tester.runAsync(() async {
-    final image = await boundary.toImage(pixelRatio: 2);
+    final image = await boundary.toImage(pixelRatio: 3);
     final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
     File('docs/screenshots/$name.png').writeAsBytesSync(bytes!.buffer.asUint8List());
   });
@@ -63,7 +63,7 @@ Future<Library> _launch(WidgetTester tester, {Widget? home, ThemeMode mode = The
   tester.view.padding = const FakeViewPadding(top: 141, bottom: 102);
   addTearDown(tester.view.reset);
   final lib = Library(
-    channel: DemoMediaChannel(now: DateTime(2026, 10, 12, 9, 41)),
+    channel: DemoMediaChannel(now: DateTime.now().subtract(const Duration(minutes: 20))),
     permission: ({required bool ask}) async => PermissionState.authorized,
   );
   await lib.start();
@@ -105,8 +105,15 @@ void main() {
     lib.addToAlbum('Travel', lib.shots.where((s) => s.app == 'Gmail' || s.app == 'Maps'));
     lib.addToAlbum('Recipes', lib.shots.where((s) => s.app == 'Chrome').take(2));
     await _snap(tester, 'timeline');
+    await tester.tap(find.textContaining('WhatsApp ', findRichText: true).first);
+    await _snap(tester, 'timeline-filter');
+    await tester.tap(find.text('All', findRichText: true).first);
+    await tester.pump(const Duration(seconds: 1));
     await tester.drag(find.byType(CustomScrollView).first, const Offset(0, -620));
     await _snap(tester, 'timeline-grid');
+
+    await tester.drag(find.byType(CustomScrollView).first, const Offset(0, 620));
+    await tester.pump(const Duration(seconds: 1));
 
     await tester.tap(find.bySemanticsLabel('Apps'));
     await _snap(tester, 'apps');
@@ -120,11 +127,12 @@ void main() {
     await tester.pump();
     await tester.tap(find.text('WhatsApp').first);
     await _snap(tester, 'app-page');
-    await tester.tap(find.byTooltip('Back'));
-    await tester.pump(const Duration(seconds: 1));
+  }, skip: !enabled);
 
-    await tester.tap(find.bySemanticsLabel('Timeline'));
-    await tester.pump();
+  testWidgets('selecting', (tester) async {
+    await _launch(tester, home: const Shell());
+    await tester.drag(find.byType(CustomScrollView).first, const Offset(0, -620));
+    await tester.pump(const Duration(seconds: 1));
     final tiles = find.byType(ShotTile);
     await tester.longPress(tiles.at(1));
     await tester.pump();

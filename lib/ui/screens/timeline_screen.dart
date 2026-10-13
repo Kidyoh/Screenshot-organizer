@@ -324,19 +324,6 @@ class _LatestCard extends StatelessWidget {
         ),
         child: Stack(fit: StackFit.expand, children: [
           Hero(tag: 'rail-${shot.id}', child: RoundedShot(shot, radius: 26)),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(26),
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  stops: const [0.55, 1],
-                  colors: [Colors.transparent, Colors.black.withValues(alpha: 0.55)],
-                ),
-              ),
-            ),
-          ),
           Positioned(
             left: 10,
             top: 10,
@@ -360,11 +347,14 @@ class _LatestCard extends StatelessWidget {
             ),
           ),
           Positioned(
-            left: 14,
-            right: 14,
-            bottom: 12,
-            child: Text(_when(shot.date),
-                style: serifAccent(19, Colors.white)),
+            left: 10,
+            bottom: 10,
+            child: Glass(
+              radius: 14,
+              padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
+              child: Text(_when(shot.date),
+                  style: context.text.labelMedium?.copyWith(color: Colors.white)),
+            ),
           ),
         ]),
       ),

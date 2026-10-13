@@ -161,11 +161,7 @@ class _FavoritesCard extends StatelessWidget {
         constraints: const BoxConstraints(minHeight: 176),
         padding: const EdgeInsets.fromLTRB(22, 20, 12, 20),
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Brand.coral, Color(0xFFFF8A65)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+          color: Brand.coral,
           borderRadius: BorderRadius.circular(Insets.radius),
         ),
         child: Row(children: [
@@ -186,7 +182,7 @@ class _FavoritesCard extends StatelessWidget {
                 Text('Favorites', style: serifAccent(34, Colors.white)),
                 const SizedBox(height: 4),
                 Text(
-                  shots.isEmpty ? 'Tap ♥ on a screenshot' : formatCount(shots.length, 'screenshot'),
+                  shots.isEmpty ? 'Tap the heart on any screenshot' : formatCount(shots.length, 'screenshot'),
                   style: context.text.labelLarge?.copyWith(color: Colors.white.withValues(alpha: 0.85)),
                 ),
               ],
@@ -216,7 +212,7 @@ class _NewAlbumCard extends StatelessWidget {
             Container(
               width: 52,
               height: 52,
-              decoration: const BoxDecoration(gradient: Brand.gradient, shape: BoxShape.circle),
+              decoration: BoxDecoration(color: context.highlight, shape: BoxShape.circle),
               child: const Icon(Icons.add_rounded, color: Colors.white, size: 28),
             ),
             const SizedBox(height: 12),

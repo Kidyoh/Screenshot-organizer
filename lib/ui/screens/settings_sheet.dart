@@ -57,7 +57,7 @@ Future<void> showSettings(BuildContext context) => showAppSheet<void>(context, (
             ),
             const SizedBox(height: 16),
             Center(
-              child: Text('SnapSort 1.1', style: context.text.bodySmall?.copyWith(color: t.faint)),
+              child: Text('SnapSort 1.1.1', style: context.text.bodySmall?.copyWith(color: t.faint)),
             ),
           ],
         ),
