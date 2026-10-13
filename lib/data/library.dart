@@ -48,6 +48,9 @@ class Library extends ChangeNotifier {
   List<AppGroup> apps = const [];
 
   final Set<int> favorites = {};
+
+  /// Screenshots the person chose to keep in Swipe to clean.
+  final Set<int> reviewed = {};
   final LinkedHashMap<String, List<int>> albums = LinkedHashMap();
 
   bool scanningDuplicates = false;
@@ -205,6 +208,7 @@ class Library extends ChangeNotifier {
     }
     if (removed.isNotEmpty) {
       favorites.removeAll(removed);
+      reviewed.removeAll(removed);
       for (final list in albums.values) {
         list.removeWhere(removed.toSet().contains);
       }
@@ -283,6 +287,9 @@ class Library extends ChangeNotifier {
       favorites
         ..clear()
         ..addAll((prefs.getStringList('favorites') ?? const []).map(int.parse));
+      reviewed
+        ..clear()
+        ..addAll((prefs.getStringList('reviewed') ?? const []).map(int.parse));
       final raw = prefs.getString('albums');
       albums.clear();
       if (raw != null) {
@@ -302,9 +309,28 @@ class Library extends ChangeNotifier {
       await prefs.setStringList(
           'favorites', favorites.map((id) => '$id').toList());
       await prefs.setString('albums', jsonEncode(albums));
+      await prefs.setStringList('reviewed', reviewed.map((id) => '$id').toList());
     } catch (e) {
       debugPrint('Could not save albums: $e');
     }
+  }
+
+  // ---- Swipe to clean ----
+
+  /// Screenshots not yet kept in Swipe to clean, oldest first.
+  List<Shot> get unreviewed =>
+      shots.where((s) => !reviewed.contains(s.id)).toList().reversed.toList();
+
+  void setReviewed(Shot shot, bool value) {
+    value ? reviewed.add(shot.id) : reviewed.remove(shot.id);
+    _saveAlbums();
+    notifyListeners();
+  }
+
+  void resetReviewed() {
+    reviewed.clear();
+    _saveAlbums();
+    notifyListeners();
   }
 
   // ---- Duplicates ----

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:photo_manager/photo_manager.dart';
@@ -42,6 +44,13 @@ ImageProvider thumbProvider(Shot shot) => shot.asset != null
         thumbnailSize: const ThumbnailSize(270, 585),
         thumbnailFormat: ThumbnailFormat.jpeg,
       );
+
+/// A sharper image for big cards: the file itself, capped at phone width.
+ImageProvider largeProvider(Shot shot) {
+  if (shot.asset != null) return AssetImage(shot.asset!);
+  if (shot.path.isNotEmpty) return ResizeImage(FileImage(File(shot.path)), width: 1080);
+  return thumbProvider(shot);
+}
 
 /// Thumbnail that fades in once decoded, on a placeholder tint.
 class ShotThumb extends StatelessWidget {

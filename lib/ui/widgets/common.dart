@@ -95,9 +95,13 @@ class PillButton extends StatelessWidget {
             Icon(icon, size: height * 0.36, color: fg),
             SizedBox(width: height * 0.15),
           ],
-          Text(label,
-              style: context.text.labelLarge?.copyWith(
-                  color: fg, fontSize: height >= 50 ? 15 : 13.5)),
+          Flexible(
+            child: Text(label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: context.text.labelLarge?.copyWith(
+                    color: fg, fontSize: height >= 50 ? 15 : 13.5)),
+          ),
         ],
       ],
     );

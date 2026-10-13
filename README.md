@@ -16,6 +16,7 @@ everything stays on the phone.
 <p>
   <img src="docs/screenshots/onboarding-1.png" width="160">
   <img src="docs/screenshots/onboarding-2.png" width="160">
+  <img src="docs/screenshots/swipe.png" width="160">
   <img src="docs/screenshots/selecting.png" width="160">
   <img src="docs/screenshots/viewer.png" width="160">
   <img src="docs/screenshots/timeline-dark.png" width="160">
@@ -65,6 +66,12 @@ Design tokens live in `lib/ui/design/tokens.dart` and the theme in
 - **Albums:** Favorites plus your own albums. Long-press screenshots to select
   them, then add them to an album, share or delete. Long-press an album to
   rename or delete it.
+- **Swipe to clean:** go through screenshots one card at a time, Tinder style:
+  swipe left to delete, right to keep, up to favorite, with undo. Deletions are
+  collected and done together at the end, after a summary, so Android asks only
+  once. Kept screenshots are remembered, so the next session picks up where you
+  left off. Start it from Clean up, or from any app's page to sweep through just
+  that app.
 - **Clean up:** how much space screenshots take, split by app; an exact
   duplicate finder that keeps the oldest copy; old screenshots (30 days,
   3 months or 1 year); and the biggest files. On Android 11+ deletes go to the

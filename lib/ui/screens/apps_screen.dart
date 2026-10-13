@@ -8,6 +8,7 @@ import '../scope.dart';
 import '../widgets/common.dart';
 import '../widgets/shots.dart';
 import 'group_screen.dart';
+import 'swipe_screen.dart';
 
 enum AppSort { most, size, name }
 
@@ -17,6 +18,19 @@ void openApp(BuildContext context, String app) {
         overline: 'App',
         dot: colorFor(app),
         sections: (lib) => _byMonth(lib.shots.where((s) => s.app == app)),
+        actions: [
+          Builder(
+            builder: (context) => CircleButton(
+              icon: Icons.swipe_rounded,
+              tooltip: 'Swipe through',
+              onTap: () {
+                final lib = LibraryScope.read(context);
+                openSwipe(context, lib.shots.where((s) => s.app == app).toList().reversed.toList(),
+                    title: app);
+              },
+            ),
+          ),
+        ],
       )));
 }
 

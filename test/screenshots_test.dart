@@ -15,6 +15,7 @@ import 'package:snapsort/data/library.dart';
 import 'package:snapsort/main.dart';
 import 'package:snapsort/ui/onboarding/onboarding_screen.dart';
 import 'package:snapsort/ui/screens/shell.dart';
+import 'package:snapsort/ui/screens/swipe_screen.dart';
 import 'package:snapsort/ui/widgets/shots.dart';
 
 const enabled = bool.fromEnvironment('SCREENSHOTS');
@@ -152,5 +153,40 @@ void main() {
     await _snap(tester, 'timeline-dark');
     await tester.tap(find.bySemanticsLabel('Clean up'));
     await _snap(tester, 'cleanup-dark');
+  }, skip: !enabled);
+
+  testWidgets('swipe', (tester) async {
+    final lib = await _launch(tester, home: const Shell());
+    await tester.tap(find.bySemanticsLabel('Clean up'));
+    await _snap(tester, 'cleanup');
+    await tester.pumpWidget(RepaintBoundary(
+      key: _root,
+      child: SnapSortApp(
+        library: lib,
+        prefs: Prefs()..themeMode = ThemeMode.light,
+        home: SwipeScreen(shots: lib.unreviewed.reversed.toList(), title: 'Swipe to clean'),
+      ),
+    ));
+    Future<void> settle() async {
+      for (var i = 0; i < 10; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+    }
+
+    await settle();
+    await tester.tap(find.bySemanticsLabel('Keep'));
+    await settle();
+    await tester.tap(find.bySemanticsLabel('Delete'));
+    await settle();
+    final g = await tester.startGesture(tester.getCenter(find.byType(SwipeScreen)));
+    await g.moveBy(const Offset(-40, 0));
+    await g.moveBy(const Offset(-80, 6));
+    await tester.pump();
+    await _snap(tester, 'swipe');
+    await g.moveBy(const Offset(-200, 10));
+    await g.up();
+    await settle();
+    await tester.tap(find.textContaining('Finish'));
+    await _snap(tester, 'swipe-summary');
   }, skip: !enabled);
 }

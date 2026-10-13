@@ -20,6 +20,7 @@ class GroupScreen extends StatelessWidget {
     this.album,
     this.hint,
     this.emptyMessage = 'Nothing here.',
+    this.actions = const [],
   });
 
   final String title;
@@ -30,6 +31,9 @@ class GroupScreen extends StatelessWidget {
   final String? album;
   final String? hint;
   final String emptyMessage;
+
+  /// Buttons at the top right (e.g. Swipe through).
+  final List<Widget> actions;
 
   @override
   Widget build(BuildContext context) {
@@ -48,6 +52,7 @@ class GroupScreen extends StatelessWidget {
           overline: overline,
           dot: dot,
           subtitle: '${formatCount(shots.length, 'screenshot')} · ${formatBytes(size)}',
+          actions: actions,
         ),
         leading: [
           if (hint != null && shots.isNotEmpty)

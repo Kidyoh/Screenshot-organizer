@@ -8,6 +8,7 @@ import 'package:snapsort/data/media_channel.dart';
 import 'package:snapsort/data/shot.dart';
 import 'package:snapsort/main.dart';
 import 'package:snapsort/ui/screens/shell.dart';
+import 'package:snapsort/ui/screens/swipe_screen.dart';
 
 /// Stands in for the native side with a handful of made-up screenshots.
 class FakeMedia extends MediaChannel {
@@ -129,6 +130,8 @@ void main() {
 
     await tester.tap(find.bySemanticsLabel('Clean up'));
     await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('Scan'), 200, scrollable: find.byType(Scrollable).hitTestable().first);
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Scan'));
     await tester.pumpAndSettle();
     expect(find.text('1 extra copy you can let go'), findsOneWidget);
@@ -172,9 +175,47 @@ void main() {
     }
     await tester.tap(find.bySemanticsLabel('Clean up'));
     await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('Scan'), 200, scrollable: find.byType(Scrollable).hitTestable().first);
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Scan'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Review').first);
     await tester.pumpAndSettle();
+  });
+
+  testWidgets('swipe to clean: drag, buttons, undo, then delete the marked ones', (tester) async {
+    final lib = await launch(tester);
+    await tester.tap(find.bySemanticsLabel('Clean up'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Start'));
+    await tester.pumpAndSettle();
+    expect(find.byType(SwipeScreen), findsOneWidget);
+    expect(find.text('1 of 6'), findsOneWidget);
+
+    // Oldest first: 5, 4, 6, 3, 2, 1.
+    await tester.dragFrom(tester.getCenter(find.byType(SwipeScreen)), const Offset(-400, 0));
+    await tester.pumpAndSettle();
+    await tester.tap(find.bySemanticsLabel('Keep').hitTestable());
+    await tester.pumpAndSettle();
+    await tester.tap(find.bySemanticsLabel('Favorite').hitTestable());
+    await tester.pumpAndSettle();
+    expect(lib.favorites, {6});
+    await tester.tap(find.bySemanticsLabel('Undo').hitTestable());
+    await tester.pumpAndSettle();
+    expect(lib.favorites, isEmpty);
+    expect(find.text('3 of 6'), findsOneWidget);
+    await tester.tap(find.bySemanticsLabel('Delete').hitTestable());
+    await tester.pumpAndSettle();
+    expect(lib.reviewed, {4});
+
+    await tester.tap(find.text('2 · Finish'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('marked', findRichText: true), findsOneWidget);
+    await tester.tap(find.text('Delete 2 screenshots'));
+    await tester.pumpAndSettle();
+    expect(lib.shots.map((s) => s.id).toSet(), {1, 2, 3, 4});
+    expect(find.byType(SwipeScreen), findsNothing);
+    // The next session skips what was kept.
+    expect(lib.unreviewed.map((s) => s.id), [3, 2, 1]);
   });
 }

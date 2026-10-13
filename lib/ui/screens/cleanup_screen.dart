@@ -9,6 +9,7 @@ import '../scope.dart';
 import '../widgets/common.dart';
 import 'apps_screen.dart';
 import 'group_screen.dart';
+import 'swipe_screen.dart';
 
 /// Storage overview plus tools for duplicates, old and big screenshots.
 class CleanupScreen extends StatefulWidget {
@@ -53,8 +54,31 @@ class _CleanupScreenState extends State<CleanupScreen> {
     final extraSize =
         dupes?.fold<int>(0, (n, g) => n + g.skip(1).fold<int>(0, (m, s) => m + s.size)) ?? 0;
 
+    final unreviewed = lib.unreviewed;
     final cards = <Widget>[
       _StorageHero(lib: lib),
+      _ToolCard(
+        icon: Icons.swipe_rounded,
+        color: Brand.violet,
+        title: 'Swipe to clean',
+        figure: unreviewed.isEmpty ? null : '${unreviewed.length}',
+        caption: lib.shots.isEmpty
+            ? 'No screenshots yet.'
+            : unreviewed.isEmpty
+                ? "You've been through them all."
+                : 'to go through. Left to delete, right to keep.',
+        action: lib.shots.isEmpty
+            ? null
+            : PillButton(
+                label: unreviewed.isEmpty ? 'Start over' : 'Start',
+                height: 42,
+                expand: false,
+                onTap: () {
+                  if (unreviewed.isEmpty) lib.resetReviewed();
+                  openSwipe(context, lib.unreviewed);
+                },
+              ),
+      ),
       _ToolCard(
         icon: Icons.copy_all_rounded,
         color: Brand.violet,
