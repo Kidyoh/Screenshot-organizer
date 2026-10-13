@@ -1,5 +1,20 @@
 import 'package:photo_manager/photo_manager.dart';
 
+/// How SnapSort knows which app a screenshot came from.
+enum AppSource {
+  /// The phone wrote it into the file name or folder.
+  fileName,
+
+  /// Android's usage history: the app that was open at that moment.
+  usage,
+
+  /// The person picked it.
+  manual,
+
+  /// No clue yet.
+  unknown,
+}
+
 /// One screenshot on the phone.
 class Shot {
   Shot({
@@ -44,6 +59,8 @@ class Shot {
 
   /// Which app the screenshot was taken in, or [otherApp].
   String app;
+
+  AppSource appSource = AppSource.unknown;
 
   /// Bundled image used instead of the media store in demo mode.
   final String? asset;

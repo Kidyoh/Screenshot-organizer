@@ -45,10 +45,24 @@ class FakeMedia extends MediaChannel {
 
   @override
   Future<Map<String, String>> appLabels(List<String> packages) async =>
-      {'com.android.chrome': 'Chrome'};
+      {'com.android.chrome': 'Chrome', 'com.tinder': 'Tinder'};
 
   @override
   Future<Map<String, String>> hashLabels() async => const {};
+
+  /// Pretend usage history: screenshot id -> package open at that moment.
+  Map<int, String> usage = const {};
+  bool access = false;
+
+  @override
+  Future<bool> usageAccess() async => access;
+
+  @override
+  Future<void> openUsageAccess() async {}
+
+  @override
+  Future<Map<int, String>> appsAt(Map<int, int> times) async =>
+      {for (final id in times.keys) if (usage[id] != null) id: usage[id]!};
 
   // Shots 1 and 2 are identical files.
   @override
@@ -69,14 +83,14 @@ class FakeMedia extends MediaChannel {
 }
 
 void main() {
-  setUp(() => SharedPreferences.setMockInitialValues({}));
+  setUp(() => SharedPreferences.setMockInitialValues({'usagePromptShown': true}));
 
-  Future<Library> launch(WidgetTester tester) async {
+  Future<Library> launch(WidgetTester tester, {FakeMedia? media}) async {
     tester.view.physicalSize = const Size(1080, 2400);
     tester.view.devicePixelRatio = 2.75;
     addTearDown(tester.view.reset);
     final lib = Library(
-      channel: FakeMedia(),
+      channel: media ?? FakeMedia(),
       permission: ({required bool ask}) async => PermissionState.authorized,
     );
     await lib.start();
@@ -217,5 +231,59 @@ void main() {
     expect(find.byType(SwipeScreen), findsNothing);
     // The next session skips what was kept.
     expect(lib.unreviewed.map((s) => s.id), [3, 2, 1]);
+  });
+
+  testWidgets('untagged screenshots get their app from usage history; a manual choice wins',
+      (tester) async {
+    final media = FakeMedia()
+      ..access = true
+      // 4 has no app in its name; 1 does, so usage must not override it.
+      ..usage = {4: 'com.tinder', 1: 'com.tinder'};
+    final lib = await launch(tester, media: media);
+    final byId = {for (final s in lib.shots) s.id: s};
+    expect(byId[4]!.app, 'Tinder');
+    expect(byId[4]!.appSource, AppSource.usage);
+    expect(byId[1]!.app, 'WhatsApp');
+    expect(byId[1]!.appSource, AppSource.fileName);
+    expect(lib.unknownCount, 0);
+
+    // Pick an app by hand from the selection dock.
+    await tester.longPress(find.byKey(const ValueKey(1)));
+    await tester.pumpAndSettle();
+    await tester.tap(find.bySemanticsLabel('Set app').hitTestable());
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Tinder').last);
+    await tester.pumpAndSettle();
+    expect(lib.byId(1)!.app, 'Tinder');
+    expect(lib.byId(1)!.appSource, AppSource.manual);
+
+    // Back to automatic.
+    await lib.setApp([lib.byId(1)!], null);
+    expect(lib.byId(1)!.app, 'WhatsApp');
+  });
+
+  testWidgets('without usage access, the Apps tab offers it for untagged screenshots',
+      (tester) async {
+    final lib = await launch(tester);
+    expect(lib.unknownCount, 1);
+    await tester.tap(find.bySemanticsLabel('Apps'));
+    await tester.pumpAndSettle();
+    expect(find.text('Find the app for 1 screenshot'), findsOneWidget);
+    await tester.tap(find.text('Not now'));
+    await tester.pumpAndSettle();
+    expect(find.text('Find the app for 1 screenshot'), findsNothing);
+  });
+
+  testWidgets('asks once for usage access when screenshots are untagged', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    final lib = await launch(tester);
+    expect(find.textContaining('One more', findRichText: true), findsOneWidget);
+    await tester.tap(find.text('Not now'));
+    await tester.pumpAndSettle();
+    expect(lib.usagePromptShown, isTrue);
+    // The gentler card on the Apps tab is still there.
+    await tester.tap(find.bySemanticsLabel('Apps'));
+    await tester.pumpAndSettle();
+    expect(find.text('Find the app for 1 screenshot'), findsOneWidget);
   });
 }

@@ -257,3 +257,73 @@ Future<bool> addToAlbum(BuildContext context, List<Shot> shots) async {
   showSnack(context, 'Added to $album', icon: Icons.photo_album_rounded);
   return true;
 }
+
+String appSourceText(AppSource source) => switch (source) {
+      AppSource.fileName => 'From the file name',
+      AppSource.usage => 'From the app that was open at the time',
+      AppSource.manual => 'You chose this',
+      AppSource.unknown => 'Not known yet',
+    };
+
+/// Lets the person file [shots] under an app by hand (or back to automatic).
+Future<bool> setAppFor(BuildContext context, List<Shot> shots) async {
+  final lib = LibraryScope.read(context);
+  const other = '\u0000other', automatic = '\u0000auto';
+  final names = lib.apps.map((g) => g.name).where((n) => n != Shot.otherApp).toList()
+    ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+  final anyManual = shots.any((s) => s.appSource == AppSource.manual);
+  final choice = await showAppSheet<String>(context, (context) {
+    final t = context.tokens;
+    Widget row(Widget leading, String title, String value) => Pressable(
+          onTap: () => Navigator.pop(context, value),
+          scale: 0.98,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            child: Row(children: [
+              SizedBox(width: 40, child: Center(child: leading)),
+              const SizedBox(width: 12),
+              Expanded(child: Text(title, style: context.text.titleMedium)),
+              Icon(Icons.chevron_right_rounded, color: t.faint),
+            ]),
+          ),
+        );
+    Widget dot(Color c) => Container(
+        width: 12, height: 12, decoration: BoxDecoration(color: c, shape: BoxShape.circle));
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.75),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SheetHeading(
+            title: 'Which',
+            accent: 'app?',
+            message: 'For ${formatCount(shots.length, 'screenshot')}. Your choice always wins.',
+          ),
+          Flexible(
+            child: ListView(shrinkWrap: true, children: [
+              row(Icon(Icons.edit_outlined, color: context.highlight), 'Another app…', other),
+              if (anyManual)
+                row(Icon(Icons.auto_mode_rounded, color: t.muted), 'Back to automatic', automatic),
+              for (final n in names) row(dot(colorFor(n)), n, n),
+            ]),
+          ),
+        ],
+      ),
+    );
+  });
+  if (choice == null || !context.mounted) return false;
+  String? app = choice;
+  if (choice == other) {
+    app = (await askForName(context, title: 'Which', accent: 'app?', action: 'Save'))?.trim();
+    if (app == null || app.isEmpty || !context.mounted) return false;
+  } else if (choice == automatic) {
+    app = null;
+  }
+  await lib.setApp(shots, app);
+  if (context.mounted) {
+    showSnack(context, app == null ? 'Back to automatic' : 'Filed under $app',
+        icon: Icons.label_rounded);
+  }
+  return true;
+}

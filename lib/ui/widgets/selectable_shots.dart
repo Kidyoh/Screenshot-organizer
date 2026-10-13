@@ -159,6 +159,9 @@ class _SelectableShotsState extends State<SelectableShots> {
       DockAction(Icons.photo_album_outlined, 'Album', () async {
         if (await addToAlbum(context, selected)) _selection.clear();
       }),
+      DockAction(Icons.label_outline_rounded, 'Set app', () async {
+        if (await setAppFor(context, selected)) _selection.clear();
+      }),
       DockAction(Icons.ios_share_rounded, 'Share', () => lib.share(selected)),
       DockAction(
         allFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,

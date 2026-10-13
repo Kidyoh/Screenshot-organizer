@@ -79,6 +79,19 @@ class _ViewerPageState extends State<ViewerPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SheetHeading(title: s.app, accent: 'details'),
+          Row(children: [
+            Expanded(child: row(Icons.apps_rounded, 'App · ${appSourceText(s.appSource)}', s.app)),
+            PillButton(
+              label: 'Change',
+              style: PillStyle.soft,
+              height: 40,
+              expand: false,
+              onTap: () {
+                Navigator.pop(context);
+                setAppFor(this.context, [s]);
+              },
+            ),
+          ]),
           row(Icons.event_rounded, 'Taken', '${longDate(s.date)} at ${timeOfDay(s.date)}'),
           row(Icons.aspect_ratio_rounded, 'Size',
               '${s.width} × ${s.height}  ·  ${formatBytes(s.size)}'),

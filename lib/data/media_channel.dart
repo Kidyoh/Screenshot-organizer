@@ -20,6 +20,22 @@ class MediaChannel {
     return raw ?? const {};
   }
 
+  /// Whether the person turned on Usage access for SnapSort.
+  Future<bool> usageAccess() async => await _ch.invokeMethod<bool>('usageAccess') ?? false;
+
+  Future<void> openUsageAccess() => _ch.invokeMethod('openUsageAccess');
+
+  /// Screenshot id -> package of the app that was open when it was taken,
+  /// for the ones Android's usage history (or earlier lookups) can answer.
+  Future<Map<int, String>> appsAt(Map<int, int> times) async {
+    if (times.isEmpty) return const {};
+    final raw = await _ch.invokeMapMethod<String, String>('appsAt', {
+          'times': times.map((k, v) => MapEntry('$k', v)),
+        }) ??
+        {};
+    return raw.map((k, v) => MapEntry(int.parse(k), v));
+  }
+
   Future<Map<String, String>> hashLabels() async =>
       await _ch.invokeMapMethod<String, String>('hashLabels') ?? const {};
 

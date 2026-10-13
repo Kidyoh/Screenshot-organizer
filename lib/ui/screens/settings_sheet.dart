@@ -44,7 +44,26 @@ Future<void> showSettings(BuildContext context) => showAppSheet<void>(context, (
             fact(Icons.folder_open_rounded, Brand.violet, 'Reads your Screenshots folder',
                 'Anything saved in a folder called Screenshots shows up, including subfolders.'),
             fact(Icons.apps_rounded, Brand.mint, 'Sorts by app from the file name',
-                'Phones write the app into the screenshot\'s name. Ones without it go under Other.'),
+                'Most phones write the app into the screenshot\'s name.'),
+            fact(
+              Icons.manage_search_rounded,
+              Brand.amber,
+              'Usage access: ${lib.usageAccess ? 'on' : 'off'}',
+              lib.usageAccess
+                  ? 'For screenshots without the app in the name, SnapSort checks which app was open when you took them.'
+                  : 'Turn it on so SnapSort can tell which app was open for screenshots without the app in the name.',
+            ),
+            if (!lib.usageAccess)
+              Padding(
+                padding: const EdgeInsets.only(left: 54, bottom: 14),
+                child: PillButton(
+                  label: 'Turn on usage access',
+                  style: PillStyle.soft,
+                  height: 42,
+                  expand: false,
+                  onTap: lib.openUsageAccess,
+                ),
+              ),
             fact(Icons.wifi_off_rounded, Brand.coral, 'Private by design',
                 'No internet permission and no AI. Albums and favourites stay on this phone.'),
             const SizedBox(height: 6),
@@ -57,7 +76,7 @@ Future<void> showSettings(BuildContext context) => showAppSheet<void>(context, (
             ),
             const SizedBox(height: 16),
             Center(
-              child: Text('SnapSort 1.2.1', style: context.text.bodySmall?.copyWith(color: t.faint)),
+              child: Text('SnapSort 1.3', style: context.text.bodySmall?.copyWith(color: t.faint)),
             ),
           ],
         ),

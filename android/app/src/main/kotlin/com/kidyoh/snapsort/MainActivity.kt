@@ -11,6 +11,7 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.provider.MediaStore
+import android.provider.Settings
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -30,11 +31,22 @@ class MainActivity : FlutterActivity() {
             .setMethodCallHandler { call, result ->
                 when (call.method) {
                     "sdkInt" -> result.success(Build.VERSION.SDK_INT)
-                    "query" -> background(result) { queryScreenshots() }
+                    "query" -> background(result) { ScreenshotStore.query(this) }
                     "appLabels" -> background(result) {
                         appLabels(call.argument<List<String>>("packages").orEmpty())
                     }
                     "hashLabels" -> background(result) { hashLabels() }
+                    "usageAccess" -> result.success(UsageResolver(this).hasAccess())
+                    "openUsageAccess" -> {
+                        openUsageAccess()
+                        result.success(null)
+                    }
+                    "appsAt" -> background(result) {
+                        val raw = call.argument<Map<String, Number>>("times").orEmpty()
+                        val resolver = UsageResolver(this)
+                        if (resolver.hasAccess()) LabelWorker.schedule(this)
+                        resolver.resolve(raw.map { (k, v) -> k.toLong() to v.toLong() })
+                    }
                     "md5" -> background(result) { md5(ids(call.argument("ids"))) }
                     "trash" -> trash(ids(call.argument("ids")), result)
                     "share" -> {
@@ -66,66 +78,6 @@ class MainActivity : FlutterActivity() {
 
     private fun uri(id: Long): Uri =
         ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)
-
-    /** Every image living in a "Screenshots" folder (or a subfolder of one). */
-    private fun queryScreenshots(): List<Map<String, Any?>> {
-        val hasRelativePath = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
-        val projection = mutableListOf(
-            MediaStore.Images.Media._ID,
-            MediaStore.Images.Media.DISPLAY_NAME,
-            MediaStore.Images.Media.DATE_TAKEN,
-            MediaStore.Images.Media.DATE_ADDED,
-            MediaStore.Images.Media.SIZE,
-            MediaStore.Images.Media.WIDTH,
-            MediaStore.Images.Media.HEIGHT,
-            MediaStore.Images.Media.BUCKET_DISPLAY_NAME,
-            @Suppress("DEPRECATION") MediaStore.Images.Media.DATA,
-        )
-        if (hasRelativePath) projection += MediaStore.Images.Media.RELATIVE_PATH
-        val pathColumn = if (hasRelativePath) MediaStore.Images.Media.RELATIVE_PATH
-        else @Suppress("DEPRECATION") MediaStore.Images.Media.DATA
-        val selection =
-            "($pathColumn LIKE ? OR ${MediaStore.Images.Media.BUCKET_DISPLAY_NAME} LIKE ?)"
-        val args = arrayOf("%screenshot%", "%screenshot%")
-
-        val out = ArrayList<Map<String, Any?>>()
-        contentResolver.query(
-            MediaStore.Images.Media.EXTERNAL_CONTENT_URI, projection.toTypedArray(),
-            selection, args, "${MediaStore.Images.Media.DATE_ADDED} DESC"
-        )?.use { c ->
-            val idCol = c.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
-            val nameCol = c.getColumnIndexOrThrow(MediaStore.Images.Media.DISPLAY_NAME)
-            val takenCol = c.getColumnIndexOrThrow(MediaStore.Images.Media.DATE_TAKEN)
-            val addedCol = c.getColumnIndexOrThrow(MediaStore.Images.Media.DATE_ADDED)
-            val sizeCol = c.getColumnIndexOrThrow(MediaStore.Images.Media.SIZE)
-            val wCol = c.getColumnIndexOrThrow(MediaStore.Images.Media.WIDTH)
-            val hCol = c.getColumnIndexOrThrow(MediaStore.Images.Media.HEIGHT)
-            @Suppress("DEPRECATION")
-            val dataCol = c.getColumnIndexOrThrow(MediaStore.Images.Media.DATA)
-            val relCol = if (hasRelativePath) c.getColumnIndex(MediaStore.Images.Media.RELATIVE_PATH) else -1
-            while (c.moveToNext()) {
-                val data = c.getString(dataCol) ?: ""
-                var taken = c.getLong(takenCol)
-                if (taken <= 0) taken = c.getLong(addedCol) * 1000
-                var folder = if (relCol >= 0) c.getString(relCol) ?: "" else ""
-                if (folder.isEmpty() && data.isNotEmpty()) {
-                    // Turn /storage/emulated/0/Pictures/Screenshots/x.png into Pictures/Screenshots/
-                    folder = (File(data).parent ?: "").substringAfter("/emulated/0/", "") + "/"
-                }
-                out += mapOf(
-                    "id" to c.getLong(idCol),
-                    "name" to (c.getString(nameCol) ?: File(data).name),
-                    "date" to taken,
-                    "size" to c.getLong(sizeCol),
-                    "width" to c.getInt(wCol),
-                    "height" to c.getInt(hCol),
-                    "folder" to folder,
-                    "path" to data,
-                )
-            }
-        }
-        return out
-    }
 
     private fun appLabels(packages: List<String>): Map<String, String> {
         val pm = packageManager
@@ -171,6 +123,16 @@ class MainActivity : FlutterActivity() {
             }
         }
         return out
+    }
+
+    private fun openUsageAccess() {
+        val direct = Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS, Uri.parse("package:$packageName"))
+        try {
+            startActivity(direct)
+        } catch (_: Exception) {
+            // Some phones only open the general list.
+            startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS))
+        }
     }
 
     private fun hex(bytes: ByteArray) = bytes.joinToString("") { "%02x".format(it) }

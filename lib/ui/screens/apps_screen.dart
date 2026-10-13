@@ -17,6 +17,9 @@ void openApp(BuildContext context, String app) {
         title: app,
         overline: 'App',
         dot: colorFor(app),
+        hint: app == Shot.otherApp
+            ? "These don't say which app they're from. Select some and tap Set app to file them."
+            : null,
         sections: (lib) => _byMonth(lib.shots.where((s) => s.app == app)),
         actions: [
           Builder(
@@ -94,6 +97,13 @@ class _AppsScreenState extends State<AppsScreen> {
               selected: _sort,
               onChanged: (s) => setState(() => _sort = s),
             ),
+          ),
+        ),
+      if (lib.unknownCount > 0 && !lib.usageAccess && !lib.usageCardDismissed)
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(Insets.page, 14, Insets.page, 0),
+            child: _UsageCard(count: lib.unknownCount),
           ),
         ),
       if (apps.isEmpty)
@@ -202,6 +212,54 @@ class GroupCard extends StatelessWidget {
             ]),
           ]),
         ),
+      ]),
+    );
+  }
+}
+
+/// Offers Usage access when screenshots don't say which app they're from.
+class _UsageCard extends StatelessWidget {
+  const _UsageCard({required this.count});
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    final lib = LibraryScope.read(context);
+    final t = context.tokens;
+    return Panel(
+      padding: const EdgeInsets.all(20),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          IconBadge(Icons.manage_search_rounded, color: Brand.violet),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Text('Find the app for ${formatCount(count, 'screenshot')}',
+                style: context.text.titleMedium),
+          ),
+        ]),
+        const SizedBox(height: 12),
+        Text(
+          "Your phone didn't write the app into their names. With Usage access on, "
+          'SnapSort checks which app was open when each one was taken. '
+          'It stays on your phone.',
+          style: context.text.bodyMedium?.copyWith(color: t.muted),
+        ),
+        const SizedBox(height: 16),
+        Wrap(spacing: 10, runSpacing: 10, children: [
+          PillButton(
+            label: 'Turn on',
+            height: 44,
+            expand: false,
+            onTap: lib.openUsageAccess,
+          ),
+          PillButton(
+            label: 'Not now',
+            style: PillStyle.soft,
+            height: 44,
+            expand: false,
+            onTap: lib.dismissUsageCard,
+          ),
+        ]),
       ]),
     );
   }

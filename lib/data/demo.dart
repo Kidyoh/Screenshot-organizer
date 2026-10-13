@@ -86,6 +86,15 @@ class DemoMediaChannel extends MediaChannel {
   Future<Map<String, String>> hashLabels() async => const {};
 
   @override
+  Future<bool> usageAccess() async => true;
+
+  @override
+  Future<void> openUsageAccess() async {}
+
+  @override
+  Future<Map<int, String>> appsAt(Map<int, int> times) async => const {};
+
+  @override
   Future<Map<int, String>> md5(List<int> ids) async {
     final byId = {for (final m in _shots) m['id'] as int: m};
     return {

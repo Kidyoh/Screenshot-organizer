@@ -63,6 +63,14 @@ Design tokens live in `lib/ui/design/tokens.dart` and the theme in
   - Oppo / OnePlus: `Screenshot_…_<md5 of package>.jpg` (matched against
     installed apps)
   - or a `Screenshots/<App>/` subfolder
+
+  When the name doesn't say, and Usage access is on, SnapSort looks up the app
+  that came to the front just before the screenshot's timestamp in Android's
+  usage history (`UsageResolver.kt`). That's exact, not a guess. Android keeps
+  that history for about a week, so answers are saved, and a WorkManager job
+  (`LabelWorker.kt`) labels new screenshots twice a day. Anything older can be
+  filed by hand with **Set app**, which always wins. The order is: your choice,
+  then the file name, then usage history, then Other.
 - **Albums:** Favorites plus your own albums. Long-press screenshots to select
   them, then add them to an album, share or delete. Long-press an album to
   rename or delete it.

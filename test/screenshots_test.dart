@@ -58,13 +58,23 @@ Future<void> _snap(WidgetTester tester, String name) async {
   debugDisableShadows = true;
 }
 
-Future<Library> _launch(WidgetTester tester, {Widget? home, ThemeMode mode = ThemeMode.light}) async {
+/// Demo data on a phone without Usage access, so untagged screenshots stay unknown.
+class _NoUsageDemo extends DemoMediaChannel {
+  _NoUsageDemo({super.now});
+  @override
+  Future<bool> usageAccess() async => false;
+}
+
+Future<Library> _launch(WidgetTester tester,
+    {Widget? home, ThemeMode mode = ThemeMode.light, bool usage = true}) async {
   tester.view.physicalSize = const Size(1170, 2532);
   tester.view.devicePixelRatio = 3;
   tester.view.padding = const FakeViewPadding(top: 141, bottom: 102);
   addTearDown(tester.view.reset);
   final lib = Library(
-    channel: DemoMediaChannel(now: DateTime.now().subtract(const Duration(minutes: 20))),
+    channel: usage
+        ? DemoMediaChannel(now: DateTime.now().subtract(const Duration(minutes: 20)))
+        : _NoUsageDemo(now: DateTime.now().subtract(const Duration(minutes: 20))),
     permission: ({required bool ask}) async => PermissionState.authorized,
   );
   await lib.start();
@@ -88,7 +98,7 @@ Future<Library> _launch(WidgetTester tester, {Widget? home, ThemeMode mode = The
 void main() {
   setUpAll(_loadFonts);
 
-  setUp(() => SharedPreferences.setMockInitialValues({}));
+  setUp(() => SharedPreferences.setMockInitialValues({'usagePromptShown': true}));
 
   testWidgets('onboarding', (tester) async {
     await _launch(tester, home: const OnboardingScreen());
@@ -188,5 +198,15 @@ void main() {
     await settle();
     await tester.tap(find.textContaining('Finish'));
     await _snap(tester, 'swipe-summary');
+  }, skip: !enabled);
+
+  testWidgets('usage access', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    await _launch(tester, home: const Shell(), usage: false);
+    await _snap(tester, 'usage-prompt');
+    await tester.tap(find.text('Not now'));
+    await tester.pump(const Duration(seconds: 1));
+    await tester.tap(find.bySemanticsLabel('Apps'));
+    await _snap(tester, 'usage-card');
   }, skip: !enabled);
 }

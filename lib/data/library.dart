@@ -58,6 +58,23 @@ class Library extends ChangeNotifier {
   List<List<int>>? _duplicateIds;
 
   final Map<String, String> _labelCache = {};
+
+  /// Apps the person picked by hand; these always win.
+  final Map<int, String> appOverrides = {};
+
+  /// Usage access is on, so untagged screenshots get their app from history.
+  bool usageAccess = false;
+
+  /// The person said "Not now" to the usage access card.
+  bool usageCardDismissed = false;
+
+  /// The one-time usage access prompt has been shown.
+  bool usagePromptShown = false;
+
+  void markUsagePromptShown() {
+    usagePromptShown = true;
+    _saveAlbums();
+  }
   Map<String, String>? _hashLabels;
 
   bool get hasAccess =>
@@ -139,17 +156,81 @@ class Library extends ChangeNotifier {
       }
     }
 
+    String? fromName(AppHint? hint) => switch (hint) {
+          LabelHint(:final label) => label,
+          PackageHint(:final package) => _labelCache[package]!,
+          HashHint(:final md5) => _hashLabels?[md5],
+          null => null,
+        };
+
+    // Screenshots the name doesn't explain: ask Android's usage history.
+    try {
+      usageAccess = await _channel.usageAccess();
+    } catch (_) {
+      usageAccess = false;
+    }
+    final untagged = {
+      for (final e in hints.entries)
+        if (fromName(e.value) == null && !appOverrides.containsKey(e.key.id))
+          e.key.id: e.key.date.millisecondsSinceEpoch,
+    };
+    var used = const <int, String>{};
+    try {
+      used = await _channel.appsAt(untagged);
+    } catch (_) {}
+    final usedPackages = used.values.where((p) => !_labelCache.containsKey(p)).toSet().toList();
+    if (usedPackages.isNotEmpty) {
+      Map<String, String> labels = const {};
+      try {
+        labels = await _channel.appLabels(usedPackages);
+      } catch (_) {}
+      for (final p in usedPackages) {
+        _labelCache[p] = labels[p] ?? prettifyPackage(p);
+      }
+    }
+
     // Merge spellings that only differ by case ("Chrome" / "chrome").
     final canonical = <String, String>{};
     for (final entry in hints.entries) {
-      final name = switch (entry.value) {
-        LabelHint(:final label) => label,
-        PackageHint(:final package) => _labelCache[package]!,
-        HashHint(:final md5) => _hashLabels?[md5] ?? Shot.otherApp,
-        null => Shot.otherApp,
-      };
-      entry.key.app = canonical.putIfAbsent(name.toLowerCase(), () => name);
+      final shot = entry.key;
+      final manual = appOverrides[shot.id];
+      final named = fromName(entry.value);
+      final usage = used[shot.id] == null ? null : _labelCache[used[shot.id]!];
+      final (name, source) = manual != null
+          ? (manual, AppSource.manual)
+          : named != null
+              ? (named, AppSource.fileName)
+              : usage != null
+                  ? (usage, AppSource.usage)
+                  : (Shot.otherApp, AppSource.unknown);
+      shot.app = canonical.putIfAbsent(name.toLowerCase(), () => name);
+      shot.appSource = source;
     }
+  }
+
+  /// Screenshots still filed under Other.
+  int get unknownCount => shots.where((s) => s.appSource == AppSource.unknown).length;
+
+  Future<void> openUsageAccess() => _channel.openUsageAccess();
+
+  void dismissUsageCard() {
+    usageCardDismissed = true;
+    _saveAlbums();
+    notifyListeners();
+  }
+
+  /// Files screenshots under [app] by hand, or back to automatic with null.
+  Future<void> setApp(Iterable<Shot> items, String? app) async {
+    final name = app?.trim();
+    for (final s in items) {
+      if (name == null || name.isEmpty) {
+        appOverrides.remove(s.id);
+      } else {
+        appOverrides[s.id] = name;
+      }
+    }
+    await _saveAlbums();
+    await refresh();
   }
 
   static List<AppGroup> _groupByApp(List<Shot> list) {
@@ -209,6 +290,7 @@ class Library extends ChangeNotifier {
     if (removed.isNotEmpty) {
       favorites.removeAll(removed);
       reviewed.removeAll(removed);
+      appOverrides.removeWhere((id, _) => removed.contains(id));
       for (final list in albums.values) {
         list.removeWhere(removed.toSet().contains);
       }
@@ -290,6 +372,14 @@ class Library extends ChangeNotifier {
       reviewed
         ..clear()
         ..addAll((prefs.getStringList('reviewed') ?? const []).map(int.parse));
+      appOverrides.clear();
+      final rawApps = prefs.getString('appOverrides');
+      if (rawApps != null) {
+        (jsonDecode(rawApps) as Map<String, dynamic>)
+            .forEach((k, v) => appOverrides[int.parse(k)] = v as String);
+      }
+      usageCardDismissed = prefs.getBool('usageCardDismissed') ?? false;
+      usagePromptShown = prefs.getBool('usagePromptShown') ?? false;
       final raw = prefs.getString('albums');
       albums.clear();
       if (raw != null) {
@@ -310,6 +400,10 @@ class Library extends ChangeNotifier {
           'favorites', favorites.map((id) => '$id').toList());
       await prefs.setString('albums', jsonEncode(albums));
       await prefs.setStringList('reviewed', reviewed.map((id) => '$id').toList());
+      await prefs.setString(
+          'appOverrides', jsonEncode(appOverrides.map((k, v) => MapEntry('$k', v))));
+      await prefs.setBool('usageCardDismissed', usageCardDismissed);
+      await prefs.setBool('usagePromptShown', usagePromptShown);
     } catch (e) {
       debugPrint('Could not save albums: $e');
     }
