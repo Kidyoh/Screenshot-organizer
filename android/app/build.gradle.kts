@@ -48,10 +48,28 @@ android {
         }
     }
 
+    packaging {
+        jniLibs {
+            // Compress native libraries: a much smaller download for one APK
+            // that carries both ARM builds.
+            useLegacyPackaging = true
+        }
+    }
+
     buildTypes {
         release {
             signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
         }
+    }
+}
+
+// Release APKs ship ARM only, 32- and 64-bit, which covers every phone (budget
+// Samsungs like the Galaxy A10 run 32-bit Android). Without this, a plugin's
+// lone x86_64 library would make x86 devices pick a folder with no Flutter engine.
+androidComponents {
+    onVariants(selector().withBuildType("release")) { variant ->
+        variant.packaging.jniLibs.excludes.add("lib/x86/**")
+        variant.packaging.jniLibs.excludes.add("lib/x86_64/**")
     }
 }
 

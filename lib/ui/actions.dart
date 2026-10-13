@@ -109,6 +109,12 @@ Future<bool> deleteShots(BuildContext context, List<Shot> shots) async {
   try {
     final ok = await lib.trash(shots);
     if (ok) HapticFeedback.lightImpact();
+    // Android 11+ returns false when the person taps Cancel, which needs no
+    // message. Older versions only fail when storage access is missing.
+    if (!ok && !lib.trashGoesToBin && context.mounted) {
+      showSnack(context, 'Couldn\'t delete. Allow storage access for SnapSort and try again.',
+          icon: Icons.error_outline_rounded);
+    }
     if (context.mounted && ok) {
       showSnack(
         context,

@@ -3,7 +3,7 @@
 2. Open it. If Android asks, allow "Install unknown apps" for your browser or Files app.
 3. Tap Install.
 
-For 64-bit phones (nearly every phone from the last several years).
+Works on every Android phone running Android 7 or newer.
 
 **Also in SnapSort**
 - Reads your phone's Screenshots folder and sorts it by day, month and app — no AI, no internet permission

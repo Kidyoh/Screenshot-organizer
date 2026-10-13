@@ -84,7 +84,7 @@ flutter pub get
 flutter run                          # on a phone
 flutter run --dart-define=DEMO=true  # filled with sample screenshots (nothing is read or deleted)
 flutter test
-flutter build apk --release --split-per-abi
+flutter build apk --release --target-platform android-arm,android-arm64   # one APK for every phone
 ```
 
 The screenshots above are rendered from the real screens with demo data:

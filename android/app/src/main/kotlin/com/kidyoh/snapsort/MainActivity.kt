@@ -1,5 +1,6 @@
 package com.kidyoh.snapsort
 
+import android.Manifest
 import android.app.Activity
 import android.content.ClipData
 import android.content.ContentUris
@@ -21,6 +22,7 @@ class MainActivity : FlutterActivity() {
     private val worker = Executors.newFixedThreadPool(2)
     private val mainHandler = Handler(Looper.getMainLooper())
     private var pendingTrash: MethodChannel.Result? = null
+    private var pendingDelete: Pair<List<Long>, MethodChannel.Result>? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -188,17 +190,41 @@ class MainActivity : FlutterActivity() {
                 result.error("trash", e.message, null)
             }
         } else {
-            background(result) {
-                var ok = true
-                for (u in uris) {
-                    try {
-                        if (contentResolver.delete(u, null, null) == 0) ok = false
-                    } catch (_: SecurityException) {
-                        ok = false
-                    }
-                }
-                ok
+            // Android 10 and older delete directly, which needs the storage
+            // write permission (Android 10 is never asked for it up front).
+            if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                if (pendingDelete != null) return result.error("busy", "Another delete is in progress", null)
+                pendingDelete = ids to result
+                requestPermissions(arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), WRITE_REQUEST)
+                return
             }
+            deleteDirectly(uris, result)
+        }
+    }
+
+    private fun deleteDirectly(uris: List<Uri>, result: MethodChannel.Result) {
+        background(result) {
+            var ok = true
+            for (u in uris) {
+                try {
+                    if (contentResolver.delete(u, null, null) == 0) ok = false
+                } catch (_: SecurityException) {
+                    ok = false
+                }
+            }
+            ok
+        }
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode != WRITE_REQUEST) return
+        val (ids, result) = pendingDelete ?: return
+        pendingDelete = null
+        if (grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED) {
+            deleteDirectly(ids.map(::uri), result)
+        } else {
+            result.success(false)
         }
     }
 
@@ -237,5 +263,6 @@ class MainActivity : FlutterActivity() {
 
     companion object {
         private const val TRASH_REQUEST = 4242
+        private const val WRITE_REQUEST = 4243
     }
 }
