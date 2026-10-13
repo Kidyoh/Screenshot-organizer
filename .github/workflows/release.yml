@@ -103,7 +103,9 @@ jobs:
         run: |
           (cd dist && sha256sum "snapsort-${TAG}.apk" > "snapsort-${TAG}.apk.sha256")
           sha="$(cut -d' ' -f1 "dist/snapsort-${TAG}.apk.sha256")"
-          sed -e "s/{{TAG}}/${TAG}/g" -e "s/{{SHA}}/${sha}/g" .github/release-notes.template.md > release-notes.md
+          # What's new for this version (.github/whats-new/<tag>.md), then the standard install notes.
+          { if [ -f ".github/whats-new/${TAG}.md" ]; then cat ".github/whats-new/${TAG}.md"; echo; fi
+            sed -e "s/{{TAG}}/${TAG}/g" -e "s/{{SHA}}/${sha}/g" .github/release-notes.template.md; } > release-notes.md
 
       - name: Publish the GitHub Release
         uses: softprops/action-gh-release@v2

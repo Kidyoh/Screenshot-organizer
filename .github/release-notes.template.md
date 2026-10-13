@@ -1,17 +1,15 @@
-## SnapSort {{TAG}}
+**How to install**
+1. Tap **snapsort-{{TAG}}.apk** below to download it.
+2. Open it. If Android asks, allow "Install unknown apps" for your browser or Files app.
+3. Tap Install.
 
-**Your screenshots, sorted.** Reads your phone's Screenshots folder and organizes it. No AI, no internet permission.
+For 64-bit phones (nearly every phone from the last several years).
 
-- Timeline with a Latest rail, filters for your top apps and search
-- Screenshots grouped by the app they were taken in, read from the file name
+**Also in SnapSort**
+- Reads your phone's Screenshots folder and sorts it by day, month and app — no AI, no internet permission
+- Filters for your top apps, and search by app, file name or month
 - Favorites and your own albums; long-press to select, share or delete
 - Clean up: storage by app, exact duplicates, old screenshots and the biggest files (deletes go to the recycle bin on Android 11+)
 - Light and dark mode
-
-### Install (Android)
-1. Download `snapsort-{{TAG}}.apk` below on your phone and open it.
-2. If asked, allow installs from your browser or files app.
-
-For 64-bit ARM phones (nearly all phones from the last several years). Installs over earlier versions and keeps your albums and favorites.
 
 SHA-256: `{{SHA}}`
