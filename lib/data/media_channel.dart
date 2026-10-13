@@ -8,6 +8,11 @@ import 'shot.dart';
 class MediaChannel {
   static const _ch = MethodChannel('snapsort/media');
 
+  /// Details of the last crash, if the app closed unexpectedly (read once).
+  Future<String?> lastCrash() => _ch.invokeMethod<String>('lastCrash');
+
+  Future<void> shareText(String text) => _ch.invokeMethod('shareText', {'text': text});
+
   Future<int> sdkInt() async => await _ch.invokeMethod<int>('sdkInt') ?? 0;
 
   Future<List<Shot>> queryScreenshots() async {

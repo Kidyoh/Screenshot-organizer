@@ -80,6 +80,41 @@ class _ShellState extends State<Shell> {
   bool _prompted = false;
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _offerCrashReport());
+  }
+
+  /// If the app closed unexpectedly last time, offer to share the details.
+  Future<void> _offerCrashReport() async {
+    final lib = LibraryScope.read(context);
+    final report = await lib.takeCrashReport();
+    if (report == null || !mounted) return;
+    _prompted = true; // don't stack the usage prompt on top
+    final share = await showAppSheet<bool>(context, (context) => Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const SheetHeading(
+              title: 'Sorry about',
+              accent: 'that.',
+              message: 'SnapSort closed unexpectedly last time. Sharing the details '
+                  '(phone model, Android version and where it failed, no screenshots) '
+                  'helps get it fixed.',
+            ),
+            PillButton(label: 'Share details', onTap: () => Navigator.pop(context, true)),
+            const SizedBox(height: 10),
+            PillButton(
+              label: 'Not now',
+              style: PillStyle.soft,
+              onTap: () => Navigator.pop(context, false),
+            ),
+          ],
+        ));
+    if (share == true) await lib.shareText(report);
+  }
+
+  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     final lib = LibraryScope.of(context);

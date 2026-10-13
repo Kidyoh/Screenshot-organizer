@@ -59,6 +59,7 @@ android {
     buildTypes {
         release {
             signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
+            proguardFiles("proguard-rules.pro")
         }
     }
 }
@@ -68,8 +69,11 @@ android {
 // lone x86_64 library would make x86 devices pick a folder with no Flutter engine.
 androidComponents {
     onVariants(selector().withBuildType("release")) { variant ->
-        variant.packaging.jniLibs.excludes.add("lib/x86/**")
-        variant.packaging.jniLibs.excludes.add("lib/x86_64/**")
+        // SNAPSORT_KEEP_X86=1 keeps x86 for testing release builds on an emulator.
+        if (System.getenv("SNAPSORT_KEEP_X86") == null) {
+            variant.packaging.jniLibs.excludes.add("lib/x86/**")
+            variant.packaging.jniLibs.excludes.add("lib/x86_64/**")
+        }
     }
 }
 

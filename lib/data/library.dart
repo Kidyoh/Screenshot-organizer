@@ -293,6 +293,29 @@ class Library extends ChangeNotifier {
 
   Future<void> openUsageAccess() => _channel.openUsageAccess();
 
+  /// The last crash report (native crash, or an error caught in Dart), once.
+  Future<String?> takeCrashReport() async {
+    String? native;
+    try {
+      native = await _channel.lastCrash();
+    } catch (_) {}
+    if (native != null) return native;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final dart = prefs.getString('lastError');
+      if (dart != null) await prefs.remove('lastError');
+      return dart;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> shareText(String text) async {
+    try {
+      await _channel.shareText(text);
+    } catch (_) {}
+  }
+
   void dismissUsageCard() {
     usageCardDismissed = true;
     _saveAlbums();
@@ -380,10 +403,21 @@ class Library extends ChangeNotifier {
     return ok;
   }
 
-  Future<void> share(Iterable<Shot> items) =>
-      _channel.share(items.map((s) => s.id).toList());
+  Future<void> share(Iterable<Shot> items) async {
+    try {
+      await _channel.share(items.map((s) => s.id).toList());
+    } catch (e) {
+      debugPrint('Share failed: $e');
+    }
+  }
 
-  Future<void> openWith(Shot shot) => _channel.openWith(shot.id);
+  Future<void> openWith(Shot shot) async {
+    try {
+      await _channel.openWith(shot.id);
+    } catch (e) {
+      debugPrint('Open with failed: $e');
+    }
+  }
 
   // ---- Favourites & albums ----
 

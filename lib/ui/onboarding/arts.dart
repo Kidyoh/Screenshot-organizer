@@ -28,7 +28,8 @@ class _Card extends StatelessWidget {
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(width * 0.11),
-          child: Image.asset(demoAssetPath(asset), fit: BoxFit.cover, alignment: Alignment.topCenter),
+          child: Image.asset(demoAssetPath(asset),
+              fit: BoxFit.cover, alignment: Alignment.topCenter, cacheWidth: 360),
         ),
       );
 }

@@ -23,7 +23,7 @@ class LabelWorker(context: Context, params: WorkerParameters) : Worker(context, 
             }
             resolver.resolve(shots)
             Result.success()
-        } catch (_: Exception) {
+        } catch (_: Throwable) {
             Result.retry()
         }
     }

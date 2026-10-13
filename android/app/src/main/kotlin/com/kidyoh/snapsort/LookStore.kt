@@ -47,7 +47,7 @@ class LookStore(private val context: Context) {
             it.recycle()
             px
         }
-    } catch (_: Exception) {
+    } catch (_: Throwable) {
         null
     }
 

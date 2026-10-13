@@ -8,6 +8,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
+import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.provider.MediaStore
@@ -25,12 +26,26 @@ class MainActivity : FlutterActivity() {
     private var pendingTrash: MethodChannel.Result? = null
     private var pendingDelete: Pair<List<Long>, MethodChannel.Result>? = null
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        CrashLog.install(this)
+        super.onCreate(savedInstanceState)
+    }
+
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "snapsort/media")
             .setMethodCallHandler { call, result ->
                 when (call.method) {
                     "sdkInt" -> result.success(Build.VERSION.SDK_INT)
+                    "lastCrash" -> result.success(CrashLog.take(this))
+                    "shareText" -> {
+                        safely(result) {
+                            val send = Intent(Intent.ACTION_SEND)
+                                .setType("text/plain")
+                                .putExtra(Intent.EXTRA_TEXT, call.argument<String>("text").orEmpty())
+                            startActivity(Intent.createChooser(send, null))
+                        }
+                    }
                     "query" -> background(result) { ScreenshotStore.query(this) }
                     "appLabels" -> background(result) {
                         appLabels(call.argument<List<String>>("packages").orEmpty())
@@ -38,10 +53,7 @@ class MainActivity : FlutterActivity() {
                     "hashLabels" -> background(result) { hashLabels() }
                     "looks" -> background(result) { LookStore(this).looks(ids(call.argument("ids"))) }
                     "usageAccess" -> result.success(UsageResolver(this).hasAccess())
-                    "openUsageAccess" -> {
-                        openUsageAccess()
-                        result.success(null)
-                    }
+                    "openUsageAccess" -> safely(result) { openUsageAccess() }
                     "appsAt" -> background(result) {
                         val raw = call.argument<Map<String, Number>>("times").orEmpty()
                         val resolver = UsageResolver(this)
@@ -50,27 +62,33 @@ class MainActivity : FlutterActivity() {
                     }
                     "md5" -> background(result) { md5(ids(call.argument("ids"))) }
                     "trash" -> trash(ids(call.argument("ids")), result)
-                    "share" -> {
-                        share(ids(call.argument("ids")))
-                        result.success(null)
-                    }
-                    "openWith" -> {
-                        openWith(ids(call.argument("ids")).first())
-                        result.success(null)
-                    }
+                    "share" -> safely(result) { share(ids(call.argument("ids"))) }
+                    "openWith" -> safely(result) { openWith(ids(call.argument("ids")).first()) }
                     else -> result.notImplemented()
                 }
             }
     }
 
+    // Catches Throwable, not just Exception: an out-of-memory error on a
+    // background thread would otherwise close the app on low-RAM phones.
     private fun background(result: MethodChannel.Result, block: () -> Any?) {
         worker.execute {
             try {
                 val value = block()
                 mainHandler.post { result.success(value) }
-            } catch (e: Exception) {
-                mainHandler.post { result.error("media", e.message, null) }
+            } catch (e: Throwable) {
+                mainHandler.post { result.error("media", e.toString(), null) }
             }
+        }
+    }
+
+    /** Runs UI work (starting activities) without letting a failure crash the app. */
+    private fun safely(result: MethodChannel.Result, block: () -> Unit) {
+        try {
+            block()
+            result.success(null)
+        } catch (e: Throwable) {
+            result.error("ui", e.toString(), null)
         }
     }
 

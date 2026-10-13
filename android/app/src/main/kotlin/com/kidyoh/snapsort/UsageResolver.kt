@@ -47,9 +47,10 @@ class UsageResolver(private val context: Context) {
         while (events.hasNextEvent()) {
             events.getNextEvent(e)
             // 1 = MOVE_TO_FOREGROUND / ACTIVITY_RESUMED
-            if (e.eventType == 1 && e.packageName !in IGNORED) {
+            val pkg: String? = e.packageName
+            if (e.eventType == 1 && pkg != null && pkg !in IGNORED) {
                 times += e.timeStamp
-                packages += e.packageName
+                packages += pkg
             }
         }
         if (times.isEmpty()) return out

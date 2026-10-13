@@ -106,7 +106,7 @@ AppHint? _classify(String raw) {
   if (_md5.hasMatch(s)) return HashHint(s);
   if (_package.hasMatch(s)) return PackageHint(s);
   final label = s.replaceAll('_', ' ').replaceAll(RegExp(r'\s+'), ' ').trim();
-  if (label.length < 2) return null;
+  // Single letters are allowed: Samsung names X screenshots "..._X.jpg".
   return LabelHint(label);
 }
 

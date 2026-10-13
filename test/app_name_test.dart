@@ -10,6 +10,8 @@ void main() {
           const LabelHint('Samsung Internet'));
       expect(parseAppHint('Screenshot_20240115_093012_9GAG.png'),
           const LabelHint('9GAG'));
+      expect(parseAppHint('Screenshot_20240115-093012_X.jpg'),
+          const LabelHint('X'));
     });
 
     test('Xiaomi style gives the package', () {

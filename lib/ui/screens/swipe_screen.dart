@@ -636,20 +636,17 @@ class _SwipeCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  Flexible(
-                    child: Glass(
-                      radius: 16,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      child: Text(
-                        shortDate(shot.date),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: context.text.labelMedium?.copyWith(
-                          color: Colors.white,
-                        ),
+                  Glass(
+                    radius: 16,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    child: Text(
+                      shortDate(shot.date),
+                      maxLines: 1,
+                      style: context.text.labelMedium?.copyWith(
+                        color: Colors.white,
                       ),
                     ),
                   ),

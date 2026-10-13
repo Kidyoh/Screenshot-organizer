@@ -18,7 +18,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # of the product and file versions while build-number is used as the build suffix.
 # The build number must stay above 2004: 1.1.x shipped as per-ABI APKs whose
 # version codes were 2002-2004, and Android won't install a lower one over them.
-version: 1.3.1+2007
+version: 1.3.2+2008
 
 environment:
   sdk: ^3.13.4
