@@ -36,6 +36,7 @@ class MainActivity : FlutterActivity() {
                         appLabels(call.argument<List<String>>("packages").orEmpty())
                     }
                     "hashLabels" -> background(result) { hashLabels() }
+                    "looks" -> background(result) { LookStore(this).looks(ids(call.argument("ids"))) }
                     "usageAccess" -> result.success(UsageResolver(this).hasAccess())
                     "openUsageAccess" -> {
                         openUsageAccess()

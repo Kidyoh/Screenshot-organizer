@@ -69,8 +69,23 @@ Design tokens live in `lib/ui/design/tokens.dart` and the theme in
   usage history (`UsageResolver.kt`). That's exact, not a guess. Android keeps
   that history for about a week, so answers are saved, and a WorkManager job
   (`LabelWorker.kt`) labels new screenshots twice a day. Anything older can be
-  filed by hand with **Set app**, which always wins. The order is: your choice,
-  then the file name, then usage history, then Other.
+  filed by hand with **Set app**, which always wins.
+
+  Still unknown? SnapSort recognises the app from the picture itself, with fixed
+  rules and no AI (`lib/data/look.dart`). Each screenshot is shrunk once to
+  24 × 52 pixels (`LookStore.kt`) and checked against:
+  - built-in fingerprints for apps with unmistakable colours and layouts
+    (WhatsApp's wallpaper with green sent messages on the right, Telegram,
+    Spotify, Snapchat, Viber), and
+  - the person's own screenshots whose app is known: it takes the app only if
+    the three closest look-alikes all agree and are very close.
+
+  The same picture always gets the same answer, and when unsure it stays in
+  Other. `test/look_test.dart` checks the rules on the sample screens: no false
+  matches, and the look-alike matcher is never wrong when holding each one out.
+
+  Order: your choice, then the file name, then usage history, then how it
+  looks, then Other.
 - **Albums:** Favorites plus your own albums. Long-press screenshots to select
   them, then add them to an album, share or delete. Long-press an album to
   rename or delete it.

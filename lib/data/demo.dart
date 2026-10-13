@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'media_channel.dart';
 import 'shot.dart';
@@ -84,6 +85,9 @@ class DemoMediaChannel extends MediaChannel {
 
   @override
   Future<Map<String, String>> hashLabels() async => const {};
+
+  @override
+  Future<Map<int, Int32List>> looks(List<int> ids) async => const {};
 
   @override
   Future<bool> usageAccess() async => true;

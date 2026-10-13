@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:photo_manager/photo_manager.dart';
@@ -53,6 +55,13 @@ class FakeMedia extends MediaChannel {
   /// Pretend usage history: screenshot id -> package open at that moment.
   Map<int, String> usage = const {};
   bool access = false;
+
+  /// Tiny 24 × 52 copies by id, for recognising apps by look.
+  Map<int, Int32List> lookPx = const {};
+
+  @override
+  Future<Map<int, Int32List>> looks(List<int> ids) async =>
+      {for (final id in ids) if (lookPx[id] != null) id: lookPx[id]!};
 
   @override
   Future<bool> usageAccess() async => access;
@@ -285,5 +294,26 @@ void main() {
     await tester.tap(find.bySemanticsLabel('Apps'));
     await tester.pumpAndSettle();
     expect(find.text('Find the app for 1 screenshot'), findsOneWidget);
+  });
+
+  testWidgets('an untagged screenshot that looks like known Chrome ones is filed under Chrome',
+      (tester) async {
+    // A browser-like screen: grey address bar, white page, blue link band.
+    Int32List browser(int seed) => Int32List.fromList([
+          for (var y = 0; y < 52; y++)
+            for (var x = 0; x < 24; x++)
+              y < 2
+                  ? 0xFFFFFFFF
+                  : y < 6
+                      ? 0xFFF1F3F4
+                      : (y % 9 == 0 ? 0xFF1A73E8 : 0xFFFFFFFF - seed),
+        ]);
+    final media = FakeMedia()..lookPx = {3: browser(0), 6: browser(1), 4: browser(2)};
+    final lib = await launch(tester, media: media);
+    await tester.pumpAndSettle();
+    expect(lib.byId(4)!.app, 'Chrome');
+    expect(lib.byId(4)!.appSource, AppSource.looks);
+    // Screenshots with no look-alike stay unknown rather than guessed.
+    expect(lib.byId(5)!.app, 'Instagram');
   });
 }

@@ -11,6 +11,9 @@ enum AppSource {
   /// The person picked it.
   manual,
 
+  /// Recognised from how the screenshot looks (fixed rules, no AI).
+  looks,
+
   /// No clue yet.
   unknown,
 }

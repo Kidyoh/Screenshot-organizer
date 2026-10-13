@@ -45,6 +45,8 @@ Future<void> showSettings(BuildContext context) => showAppSheet<void>(context, (
                 'Anything saved in a folder called Screenshots shows up, including subfolders.'),
             fact(Icons.apps_rounded, Brand.mint, 'Sorts by app from the file name',
                 'Most phones write the app into the screenshot\'s name.'),
+            fact(Icons.visibility_outlined, Brand.coral, 'Recognises apps by how they look',
+                'Fixed rules, no AI: well-known app colours and layouts, and matches with your own screenshots whose app is known.'),
             fact(
               Icons.manage_search_rounded,
               Brand.amber,
@@ -64,7 +66,7 @@ Future<void> showSettings(BuildContext context) => showAppSheet<void>(context, (
                   onTap: lib.openUsageAccess,
                 ),
               ),
-            fact(Icons.wifi_off_rounded, Brand.coral, 'Private by design',
+            fact(Icons.wifi_off_rounded, Brand.mint, 'Private by design',
                 'No internet permission and no AI. Albums and favourites stay on this phone.'),
             const SizedBox(height: 6),
             PillButton(
@@ -76,7 +78,7 @@ Future<void> showSettings(BuildContext context) => showAppSheet<void>(context, (
             ),
             const SizedBox(height: 16),
             Center(
-              child: Text('SnapSort 1.3', style: context.text.bodySmall?.copyWith(color: t.faint)),
+              child: Text('SnapSort 1.3.1', style: context.text.bodySmall?.copyWith(color: t.faint)),
             ),
           ],
         ),

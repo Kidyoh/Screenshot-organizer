@@ -262,6 +262,7 @@ String appSourceText(AppSource source) => switch (source) {
       AppSource.fileName => 'From the file name',
       AppSource.usage => 'From the app that was open at the time',
       AppSource.manual => 'You chose this',
+      AppSource.looks => 'From how it looks',
       AppSource.unknown => 'Not known yet',
     };
 

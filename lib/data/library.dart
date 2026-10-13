@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:collection';
 import 'dart:convert';
 
@@ -6,6 +7,7 @@ import 'package:photo_manager/photo_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app_name.dart';
+import 'look.dart';
 import 'media_channel.dart';
 import 'shot.dart';
 
@@ -58,6 +60,13 @@ class Library extends ChangeNotifier {
   List<List<int>>? _duplicateIds;
 
   final Map<String, String> _labelCache = {};
+
+  /// Tiny copies of screenshots, for recognising apps by look.
+  final Map<int, Look> _looks = {};
+  int _lookPass = 0;
+
+  /// The background look-up is still working through screenshots.
+  bool recognising = false;
 
   /// Apps the person picked by hand; these always win.
   final Map<int, String> appOverrides = {};
@@ -115,6 +124,7 @@ class Library extends ChangeNotifier {
       list.sort((a, b) => b.date.compareTo(a.date));
       shots = list;
       _byId = {for (final s in list) s.id: s};
+      _recognise(); // instant, from tiny copies already made
       apps = _groupByApp(list);
       error = null;
     } catch (e) {
@@ -123,6 +133,76 @@ class Library extends ChangeNotifier {
       loading = false;
       loadedOnce = true;
       notifyListeners();
+    }
+    unawaited(_recogniseInBackground());
+  }
+
+  /// Screenshots with a known app, used as references: the newest few per app.
+  List<Shot> get _references {
+    final perApp = <String, List<Shot>>{};
+    for (final s in shots) {
+      if (s.appSource == AppSource.unknown || s.appSource == AppSource.looks) continue;
+      final list = perApp.putIfAbsent(s.app, () => []);
+      if (list.length < 25) list.add(s);
+    }
+    return perApp.values.expand((l) => l).toList();
+  }
+
+  /// Labels unknown screenshots from their looks, using only tiny copies
+  /// already fetched. Returns how many changed.
+  int _recognise() {
+    final unknown = shots.where((s) => s.appSource == AppSource.unknown).toList();
+    if (unknown.isEmpty || _looks.isEmpty) return 0;
+    final matcher = LookMatcher();
+    for (final r in _references) {
+      final look = _looks[r.id];
+      if (look != null) matcher.add(r.app, r.id, look);
+    }
+    final names = {for (final s in shots) s.app.toLowerCase(): s.app};
+    var changed = 0;
+    for (final s in unknown) {
+      final look = _looks[s.id];
+      if (look == null) continue;
+      final app = fingerprintApp(look) ?? matcher.match(look);
+      if (app == null) continue;
+      s.app = names.putIfAbsent(app.toLowerCase(), () => app);
+      s.appSource = AppSource.looks;
+      changed++;
+    }
+    return changed;
+  }
+
+  /// Makes tiny copies for unknown screenshots and their references, a batch
+  /// at a time (slow on budget phones the first time, then cached for good).
+  Future<void> _recogniseInBackground() async {
+    final pass = ++_lookPass;
+    final unknown = shots.where((s) => s.appSource == AppSource.unknown).map((s) => s.id);
+    final wanted = [..._references.map((s) => s.id), ...unknown]
+        .where((id) => !_looks.containsKey(id))
+        .toList();
+    if (wanted.isEmpty) return;
+    recognising = true;
+    notifyListeners();
+    try {
+      for (var i = 0; i < wanted.length; i += 40) {
+        final batch = wanted.sublist(i, i + 40 > wanted.length ? wanted.length : i + 40);
+        final got = await _channel.looks(batch);
+        if (pass != _lookPass) return; // a newer refresh took over
+        got.forEach((id, px) {
+          if (px.length == lookW * lookH) _looks[id] = Look(px);
+        });
+        if (_recognise() > 0) {
+          apps = _groupByApp(shots);
+          notifyListeners();
+        }
+      }
+    } catch (e) {
+      debugPrint('Could not recognise screenshots by look: $e');
+    } finally {
+      if (pass == _lookPass) {
+        recognising = false;
+        notifyListeners();
+      }
     }
   }
 

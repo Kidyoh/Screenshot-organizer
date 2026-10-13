@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/services.dart';
 
 import 'shot.dart';
@@ -33,6 +35,13 @@ class MediaChannel {
           'times': times.map((k, v) => MapEntry('$k', v)),
         }) ??
         {};
+    return raw.map((k, v) => MapEntry(int.parse(k), v));
+  }
+
+  /// 24 × 52 ARGB copies of screenshots, for recognising apps by look.
+  Future<Map<int, Int32List>> looks(List<int> ids) async {
+    if (ids.isEmpty) return const {};
+    final raw = await _ch.invokeMapMethod<String, Int32List>('looks', {'ids': ids}) ?? {};
     return raw.map((k, v) => MapEntry(int.parse(k), v));
   }
 

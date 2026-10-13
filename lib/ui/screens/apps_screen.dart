@@ -77,7 +77,11 @@ class _AppsScreenState extends State<AppsScreen> {
         child: Padding(
           padding: EdgeInsets.fromLTRB(Insets.page + 2, pad.top + 30, Insets.page, 0),
           child: PageTitle(
-            overline: lib.loadedOnce ? formatCount(apps.length, 'app') : null,
+            overline: !lib.loadedOnce
+                ? null
+                : lib.recognising
+                    ? '${formatCount(apps.length, 'app')} · recognising more…'
+                    : formatCount(apps.length, 'app'),
             lead: 'Sorted by',
             accent: 'app.',
           ),
