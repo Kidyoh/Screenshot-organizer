@@ -46,22 +46,16 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - uses: subosito/flutter-action@v2
-        with:
-          channel: stable
-          flutter-version: '3.47.5'
-          cache: true
+      - uses: gradle/actions/setup-gradle@v4
 
-      - name: Check the tag matches pubspec
+      - name: Check the tag matches versionName
         run: |
-          version="$(grep -m1 '^version:' pubspec.yaml | sed -E 's/version:[[:space:]]*([0-9]+\.[0-9]+\.[0-9]+).*/\1/')"
+          version="$(grep -m1 'versionName = ' app/build.gradle.kts | sed -E 's/.*"([^"]+)".*/\1/')"
           if [ "v${version}" != "${TAG}" ]; then
-            echo "::error::Tag ${TAG} does not match pubspec version v${version}"; exit 1
+            echo "::error::Tag ${TAG} does not match versionName v${version}"; exit 1
           fi
 
-      - run: flutter pub get
-      - run: flutter analyze
-      - run: flutter test
+      - run: ./gradlew :app:testDebugUnitTest
 
       - name: Restore release signing key
         id: signing
@@ -72,7 +66,7 @@ jobs:
         run: |
           ./scripts/setup-signing.sh
           mkdir -p dist
-          if [ -f android/key.properties ]; then
+          if [ -f key.properties ]; then
             echo "mode=build" >> "$GITHUB_OUTPUT"
           elif git fetch --depth=1 origin release-assets &&
                git show "FETCH_HEAD:${TAG}/snapsort-${TAG}.apk" > "dist/snapsort-${TAG}.apk"; then
@@ -82,11 +76,11 @@ jobs:
             echo "::error::Signing secrets are missing and there's no prebuilt APK; refusing to build with the debug key"; exit 1
           fi
 
-      - name: Build release APK (32- and 64-bit ARM, one APK for every phone)
+      - name: Build release APK (pure Kotlin, one small APK for every phone)
         if: steps.signing.outputs.mode == 'build'
         run: |
-          flutter build apk --release --target-platform android-arm,android-arm64
-          cp build/app/outputs/flutter-apk/app-release.apk "dist/snapsort-${TAG}.apk"
+          ./gradlew :app:assembleRelease
+          cp app/build/outputs/apk/release/app-release.apk "dist/snapsort-${TAG}.apk"
 
       - name: Verify the signature
         run: |

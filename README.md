@@ -2,9 +2,10 @@
 
 <img src="docs/icon.png" width="96" align="right">
 
-**Your screenshots, sorted.** A Flutter app for Android that reads your phone's
-Screenshots folder and organizes it. No AI and no internet permission:
-everything stays on the phone.
+**Your screenshots, sorted.** A small Android app, written in Kotlin with
+Jetpack Compose, that reads your phone's Screenshots folder and organizes it.
+No AI and no internet permission: everything stays on the phone. The whole app
+is about 1.6 MB.
 
 <p>
   <img src="docs/screenshots/timeline.png" width="200">
@@ -28,7 +29,8 @@ A warm, editorial look that matches the app icon.
 
 - **Type:** Plus Jakarta Sans for the interface, with Instrument Serif italic for
   the accent word in each big title ("Your *screenshots.*", "Clean *up.*").
-  Both are bundled in `assets/fonts` under the SIL Open Font License.
+  Both are bundled (trimmed to Latin) in `app/src/main/res/font` under the SIL
+  Open Font License.
 - **Colour:** a warm off-white page (near-black in dark mode), violet and coral
   from the icon, and a stable colour per app (WhatsApp green, Chrome blue…).
   Flat colours only: no gradients and no emoji anywhere.
@@ -37,16 +39,15 @@ A warm, editorial look that matches the app icon.
 - **Navigation:** a floating dark pill. The current tab grows into a labelled
   white pill. While you select screenshots, it slides away for a dock with
   Album, Share, Favorite and Delete.
-- **Viewer:** the thumbnail flies into a full-screen view with frosted-glass
-  controls. Pinch or double-tap to zoom, swipe sideways for the next one, swipe
+- **Viewer:** a full-screen view with glass controls. Pinch or double-tap to zoom, swipe sideways for the next one, swipe
   down to close.
-- **Motion:** staggered entrances (`flutter_animate`), springy press feedback,
+- **Motion:** staggered entrances, springy press feedback,
   numbers that count up, and haptics on selection.
 - **Onboarding:** three full-bleed pages with animated art built from sample
   screenshots, ending with the photo permission request.
 
-Design tokens live in `lib/ui/design/tokens.dart` and the theme in
-`lib/ui/design/theme.dart`. Light, dark or system theme is set in Settings
+Design tokens, type and colours live in `ui/Theme.kt`, shared pieces in
+`ui/Components.kt`. Light, dark or system theme is set in Settings
 (the slider button on the Timeline).
 
 ## Features
@@ -67,12 +68,12 @@ Design tokens live in `lib/ui/design/tokens.dart` and the theme in
   When the name doesn't say, and Usage access is on, SnapSort looks up the app
   that came to the front just before the screenshot's timestamp in Android's
   usage history (`UsageResolver.kt`). That's exact, not a guess. Android keeps
-  that history for about a week, so answers are saved, and a WorkManager job
-  (`LabelWorker.kt`) labels new screenshots twice a day. Anything older can be
+  that history for about a week, so answers are saved, and a platform
+  job (`LabelJob.kt`) labels new screenshots twice a day. Anything older can be
   filed by hand with **Set app**, which always wins.
 
   Still unknown? SnapSort recognises the app from the picture itself, with fixed
-  rules and no AI (`lib/data/look.dart`). Each screenshot is shrunk once to
+  rules and no AI (`data/Look.kt`). Each screenshot is shrunk once to
   24 × 52 pixels (`LookStore.kt`) and checked against:
   - built-in fingerprints for apps with unmistakable colours and layouts
     (WhatsApp's wallpaper with green sent messages on the right, Telegram,
@@ -81,7 +82,7 @@ Design tokens live in `lib/ui/design/tokens.dart` and the theme in
     the three closest look-alikes all agree and are very close.
 
   The same picture always gets the same answer, and when unsure it stays in
-  Other. `test/look_test.dart` checks the rules on the sample screens: no false
+  Other. `LookTest` checks the rules on the sample screens: no false
   matches, and the look-alike matcher is never wrong when holding each one out.
 
   Order: your choice, then the file name, then usage history, then how it
@@ -102,27 +103,24 @@ Design tokens live in `lib/ui/design/tokens.dart` and the theme in
 
 ## Run
 
-```sh
-flutter pub get
-flutter run                          # on a phone
-flutter run --dart-define=DEMO=true  # filled with sample screenshots (nothing is read or deleted)
-flutter test
-flutter build apk --release --target-platform android-arm,android-arm64   # one APK for every phone
-```
-
-The screenshots above are rendered from the real screens with demo data:
+Needs JDK 17 and the Android SDK (platform 36).
 
 ```sh
-flutter test --dart-define=SCREENSHOTS=true test/screenshots_test.dart
+./gradlew :app:testDebugUnitTest    # unit tests: file-name parser, look rules, formatting
+./gradlew :app:installDebug         # on a connected phone
+./gradlew :app:assembleRelease      # app/build/outputs/apk/release/app-release.apk
 ```
 
-Release builds are signed with the key in `android/key.properties` (not
-committed). Without it they fall back to the debug key.
+Release builds are shrunk with R8 and signed with the key in `key.properties`
+(not committed). Without it they fall back to the debug key.
 `scripts/setup-signing.sh` recreates it from the `ANDROID_KEYSTORE_*` secrets.
+
+Updating from the Flutter versions (1.x) keeps albums, favourites and choices:
+`Store.kt` copies them over on first launch.
 
 ## Releases
 
-Push a tag that matches the version in `pubspec.yaml` (for example `v1.2.0`), or
+Push a tag that matches `versionName` in `app/build.gradle.kts` (for example `v1.2.0`), or
 run Actions > Release > Run workflow. It runs the checks, builds the signed APK,
 verifies the signing key's fingerprint and publishes the Release with the APK
 and a checksum. It needs the repository secrets `ANDROID_KEYSTORE_BASE64`,
@@ -141,28 +139,27 @@ Eight 2160 × 2160 banners in `docs/banners`, built from `tool/banners/banners.h
 around real renders of the app:
 
 ```sh
-flutter test --dart-define=SCREENSHOTS=true test/screenshots_test.dart   # app screens
-node tool/banners/render.cjs                                              # needs `playwright`
+node tool/banners/render.cjs   # needs `playwright`
 ```
 
-The sample screenshots used in demo mode, onboarding and the banners come from
+The sample screenshots used in onboarding, the tests and the banners come from
 `node tool/demo/render.cjs`.
 
 ## Icon
 
 The launcher icon is drawn in code by `design/icon/gen_icon.py` (Android vector
-drawables plus `icon.svg`); `node design/icon/render.cjs` renders the PNGs, then
-`dart run flutter_native_splash:create` regenerates the launch screen.
+drawables plus `icon.svg`); `node design/icon/render.cjs` renders the PNGs. The
+launch screen reuses the same vector drawables.
 
 ## Structure
 
 ```
-lib/
-  app/        prefs (theme), routes
-  data/       Shot model, Library state, file-name → app parser, native channel, demo data
-  ui/design/  tokens and theme
-  ui/widgets/ pressable, glass, pills, cards, shot tiles, floating nav, selection dock
-  ui/screens/ shell, timeline, apps, albums, clean up, group page, viewer, settings
-  ui/onboarding/
-android/…/MainActivity.kt   MediaStore query, recycle bin, share, app names, hashing
+app/src/main/java/com/kidyoh/snapsort/
+  MainActivity.kt   permissions, recycle bin, share; the Application holds the library
+  LabelJob.kt       twice-daily usage-history labelling (JobScheduler)
+  data/             Shot model, Library state, file-name parser, look rules,
+                    MediaStore reader, usage history, thumbnails, saved state
+  ui/               theme, components, sheets, nav, shot grid, actions
+  ui/screens/       shell, timeline, apps, albums, clean up, group page,
+                    swipe to clean, viewer, settings, onboarding
 ```

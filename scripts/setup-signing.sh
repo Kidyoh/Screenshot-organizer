@@ -7,7 +7,7 @@
 #   ANDROID_KEYSTORE_PASSWORD  store and key password
 #   ANDROID_KEY_ALIAS          key alias (default: snapsort)
 set -euo pipefail
-cd "$(dirname "$0")/../android"
+cd "$(dirname "$0")/.."
 
 if [ -z "${ANDROID_KEYSTORE_BASE64:-}" ] || [ -z "${ANDROID_KEYSTORE_PASSWORD:-}" ]; then
   echo "No signing secrets set; builds will use the debug key."
@@ -16,7 +16,7 @@ fi
 
 echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > snapsort-release.jks
 cat > key.properties <<PROPS
-storeFile=../snapsort-release.jks
+storeFile=snapsort-release.jks
 storePassword=$ANDROID_KEYSTORE_PASSWORD
 keyPassword=$ANDROID_KEYSTORE_PASSWORD
 keyAlias=${ANDROID_KEY_ALIAS:-snapsort}
