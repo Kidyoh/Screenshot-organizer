@@ -194,7 +194,7 @@ Made with care, with a light and dark theme.
 |---|---|
 | App icon (512 × 512) | `icon-512.png` |
 | Feature graphic (1024 × 500) | `feature-graphic.png` |
-| Phone screenshots (2 to 8) | `screenshots/01-hello.png` to `07-private.png`, in that order |
+| Phone screenshots (2 to 8) | all 8 files in `screenshots/` (`01-timeline.png` to `08-dark.png`, 1080 × 1920), in that order |
 | Tablet screenshots | Leave empty (optional) |
 | Video | Leave empty (optional) |
 

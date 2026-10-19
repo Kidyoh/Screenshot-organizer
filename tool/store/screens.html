@@ -1,0 +1,39 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+  @font-face { font-family: Jakarta; src: url(../../app/src/main/res/font/jakarta_800.ttf); font-weight: 800; }
+  @font-face { font-family: Jakarta; src: url(../../app/src/main/res/font/jakarta_600.ttf); font-weight: 600; }
+  @font-face { font-family: Instrument; src: url(../../app/src/main/res/font/serif_italic.ttf); font-style: italic; }
+  * { box-sizing: border-box; margin: 0; }
+  body { background: #333; font-family: Jakarta, sans-serif; }
+  .s { width: 1080px; height: 1920px; position: relative; overflow: hidden; margin-bottom: 40px; }
+  .brand { position: absolute; left: 80px; top: 92px; display: flex; align-items: center; gap: 18px; font-family: Instrument; font-style: italic; font-size: 46px; }
+  .brand img { width: 64px; height: 64px; border-radius: 18px; }
+  h1 { position: absolute; left: 76px; top: 200px; font-size: 104px; font-weight: 800; line-height: 1; letter-spacing: -4.4px; }
+  h1 em { font-family: Instrument; font-style: italic; font-weight: 400; letter-spacing: -2px; font-size: 120px; }
+  p { position: absolute; left: 80px; top: 452px; width: 900px; font-size: 38px; font-weight: 600; line-height: 1.35; letter-spacing: -0.4px; }
+  .phone { position: absolute; left: 150px; top: 620px; width: 780px; height: 1274px; border-radius: 76px; background: #16151A; padding: 16px;
+           box-shadow: 0 40px 80px rgba(22,21,26,.25); }
+  .phone img { width: 100%; height: 100%; border-radius: 62px; object-fit: cover; object-position: top; display: block; }
+</style></head>
+<body>
+<script>
+const shots = [
+  ['01-timeline', '#F5F2ED', '#16151A', '#6C4DFF', 'Your screenshots,', 'sorted.', 'Every screenshot on your phone, in a clean timeline.'],
+  ['02-apps', '#E9E3FF', '#16151A', '#6C4DFF', 'Grouped', 'by app.', 'WhatsApp, Chrome, receipts and maps each get their own pile.'],
+  ['03-swipe', '#FFE3EC', '#16151A', '#E8336F', 'Swipe', 'to clean.', 'Left to delete, right to keep, up to favourite.'],
+  ['04-cleanup', '#DDF5EF', '#16151A', '#17977F', 'Free up', 'space.', 'Duplicates, old screenshots and the biggest files, in a tap.'],
+  ['05-viewer', '#16151A', '#FFFFFF', '#A794FF', 'Every detail,', 'up close.', 'Swipe through, pinch to zoom, share or delete.'],
+  ['06-albums', '#FFF0D6', '#16151A', '#D9800B', 'Keep what', 'matters.', 'Favourites and your own albums, always at hand.'],
+  ['07-settings', '#F5F2ED', '#16151A', '#6C4DFF', 'Private', 'by design.', 'No AI, no ads, no internet permission. Under 2 MB.'],
+  ['08-dark', '#0B0B0D', '#F5F3EF', '#8C73FF', 'Light', 'or dark.', 'Looks right any time of day.'],
+];
+for (const [id, bg, ink, accent, lead, acc, sub] of shots) {
+  document.write(`<div class="s" id="${id}" style="background:${bg};color:${ink}">
+    <div class="brand"><img src="../../docs/icon.png"><span>snapsort</span></div>
+    <h1>${lead}<br><em style="color:${accent}">${acc}</em></h1>
+    <p style="color:${ink};opacity:.62">${sub}</p>
+    <div class="phone"><img src="shots/${id}.png"></div></div>`);
+}
+</script>
+</body></html>
