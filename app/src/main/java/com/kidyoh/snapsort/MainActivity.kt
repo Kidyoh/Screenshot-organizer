@@ -203,4 +203,8 @@ class MainActivity : ComponentActivity(), Host {
     override fun openAppSettings() {
         launch(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$packageName")))
     }
+
+    override fun openLink(url: String) {
+        launch(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+    }
 }

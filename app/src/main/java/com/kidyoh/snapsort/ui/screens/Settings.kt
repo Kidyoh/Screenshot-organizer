@@ -80,6 +80,8 @@ fun AppState.showSettings() {
                     if (lib.loading) "Rescanning…" else "Rescan screenshots", lib::refresh,
                     icon = Icons.Rounded.Refresh, style = PillStyle.Soft, busy = lib.loading,
                 )
+                Spacer(Modifier.height(10.dp))
+                PillButton("Privacy policy", lib::openPrivacyPolicy, style = PillStyle.Soft)
                 Spacer(Modifier.height(16.dp))
                 Text("SnapSort ${BuildConfig.VERSION_NAME}", Type.bodySmall, Modifier.fillMaxWidth(), color = t.faint, align = androidx.compose.ui.text.style.TextAlign.Center)
             }

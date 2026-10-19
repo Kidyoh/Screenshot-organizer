@@ -30,6 +30,7 @@ interface Host {
     fun shareText(text: String)
     fun openUsageAccess()
     fun openAppSettings()
+    fun openLink(url: String)
 }
 
 /**
@@ -333,6 +334,7 @@ class Library(private val media: Media, private val store: Store) {
     fun shareText(text: String) = host.shareText(text)
     fun openUsageAccess() = host.openUsageAccess()
     fun openAppSettings() = host.openAppSettings()
+    fun openPrivacyPolicy() = host.openLink(PRIVACY_URL)
 
     // ---- Favourites & albums ----
 
@@ -435,6 +437,8 @@ class Library(private val media: Media, private val store: Store) {
     }
 
     companion object {
+        const val PRIVACY_URL = "https://kidus.pro.et/privacy/snapsort/"
+
         fun groupByApp(list: List<Shot>): List<AppGroup> {
             val map = LinkedHashMap<String, MutableList<Shot>>()
             for (s in list) map.getOrPut(s.app) { ArrayList() } += s
