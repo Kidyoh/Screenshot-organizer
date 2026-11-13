@@ -1,0 +1,63 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+  @font-face { font-family: Jakarta; src: url(../../app/src/main/res/font/jakarta_800.ttf); font-weight: 800; }
+  @font-face { font-family: Jakarta; src: url(../../app/src/main/res/font/jakarta_700.ttf); font-weight: 700; }
+  @font-face { font-family: Jakarta; src: url(../../app/src/main/res/font/jakarta_600.ttf); font-weight: 600; }
+  @font-face { font-family: Instrument; src: url(../../app/src/main/res/font/serif_italic.ttf); font-style: italic; }
+  * { box-sizing: border-box; margin: 0; }
+  body { margin: 0; background: #333; font-family: Jakarta, sans-serif; color: #16151A; }
+  .b { position: relative; overflow: hidden; background: #F5F2ED; }
+  body.one .b { display: none; }
+  body.one .b.on { display: block; }
+  .brand { position: absolute; display: flex; align-items: center; gap: 16px; font-family: Instrument; font-style: italic; }
+  .brand img { border-radius: 18px; }
+  .tag { position: absolute; display: inline-flex; align-items: center; gap: 12px; background: #16151A; color: #fff; border-radius: 999px; font-weight: 800; letter-spacing: .02em; }
+  .tag i { width: 14px; height: 14px; border-radius: 50%; background: #2EC4A6; display: block; }
+  h1 { position: absolute; font-weight: 800; line-height: .98; }
+  h1 em { font-family: Instrument; font-style: italic; font-weight: 400; color: #6C4DFF; }
+  .sub { position: absolute; font-weight: 600; color: #6E6A73; line-height: 1.35; }
+  .disc { position: absolute; border-radius: 50%; background: #E6DFFF; }
+  .phone { position: absolute; background: #16151A; box-shadow: 0 40px 80px rgba(22,21,26,.22); }
+  .phone img { width: 100%; height: 100%; object-fit: cover; object-position: top; display: block; }
+  .get { position: absolute; display: flex; align-items: center; gap: 26px; background: #fff; border-radius: 34px; box-shadow: 0 20px 50px rgba(22,21,26,.12); }
+  .get .qr img { display: block; width: 100%; height: 100%; }
+  .get b { display: block; font-weight: 800; }
+  .get span { display: block; font-weight: 600; color: #6E6A73; }
+  .pill { position: absolute; display: inline-flex; align-items: center; gap: 12px; background: #fff; border-radius: 999px; font-weight: 800; box-shadow: 0 16px 36px rgba(22,21,26,.14); }
+  .pill i { border-radius: 50%; display: block; }
+</style></head>
+<body>
+
+<!-- Square post 1080 x 1080 -->
+<div class="b" id="launch-square" style="width:1080px;height:1080px">
+  <div class="brand" style="left:72px;top:68px;font-size:44px"><img src="../../docs/icon.png" style="width:64px;height:64px"><span>snapsort</span></div>
+  <div class="tag" style="right:72px;top:78px;padding:16px 26px;font-size:24px"><i></i>OUT NOW</div>
+  <h1 style="left:68px;top:200px;font-size:104px;letter-spacing:-4.6px">Screenshots,<br><em style="font-size:122px;letter-spacing:-2px">sorted.</em></h1>
+  <p class="sub" style="left:72px;top:452px;width:500px;font-size:31px">Sort by app, swipe to clean, free up space. No AI, no ads, no internet.</p>
+  <div class="disc" style="right:-90px;top:480px;width:640px;height:640px"></div>
+  <div class="phone" style="left:610px;top:450px;width:400px;height:684px;border-radius:54px;padding:10px"><img src="shots/01-timeline.png" style="border-radius:44px"></div>
+  <div class="pill" style="left:520px;top:760px;padding:16px 24px;font-size:26px"><i style="width:14px;height:14px;background:#25D366"></i>WhatsApp</div>
+  <div class="get" style="left:72px;bottom:72px;padding:22px 34px 22px 22px">
+    <div class="qr" style="width:150px;height:150px"><img src="qr.svg"></div>
+    <div><b style="font-size:34px;letter-spacing:-.6px">Get it on Google Play</b><span style="font-size:24px;margin-top:6px">Scan, or search “SnapSort”</span></div>
+  </div>
+</div>
+
+<!-- Story 1080 x 1920 -->
+<div class="b" id="launch-story" style="width:1080px;height:1920px">
+  <div class="brand" style="left:80px;top:120px;font-size:52px"><img src="../../docs/icon.png" style="width:76px;height:76px"><span>snapsort</span></div>
+  <div class="tag" style="right:80px;top:132px;padding:18px 30px;font-size:28px"><i></i>OUT NOW</div>
+  <h1 style="left:76px;top:270px;font-size:128px;letter-spacing:-5.6px">Screenshots,<br><em style="font-size:150px;letter-spacing:-2.5px">sorted.</em></h1>
+  <p class="sub" style="left:80px;top:580px;width:900px;font-size:40px">Sort by app, swipe to clean and free up space. No AI, no ads, no internet.</p>
+  <div class="disc" style="left:140px;top:780px;width:800px;height:800px"></div>
+  <div class="phone" style="left:280px;top:730px;width:520px;height:848px;border-radius:64px;padding:12px"><img src="shots/01-timeline.png" style="border-radius:54px"></div>
+  <div class="pill" style="left:100px;top:1240px;padding:20px 30px;font-size:32px"><i style="width:16px;height:16px;background:#25D366"></i>WhatsApp</div>
+  <div class="pill" style="right:90px;top:960px;padding:20px 30px;font-size:32px"><i style="width:16px;height:16px;background:#4285F4"></i>Chrome</div>
+  <div class="get" style="left:80px;right:80px;bottom:90px;padding:26px 40px 26px 26px">
+    <div class="qr" style="width:170px;height:170px"><img src="qr.svg"></div>
+    <div><b style="font-size:44px;letter-spacing:-.8px">Get it on Google Play</b><span style="font-size:30px;margin-top:8px">Scan the code, or search “SnapSort”</span></div>
+  </div>
+</div>
+
+</body></html>
